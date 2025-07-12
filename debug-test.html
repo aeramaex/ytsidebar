@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Transcript Extractor Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        
+        .test-section {
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        
+        .test-section h3 {
+            margin-top: 0;
+            color: #555;
+        }
+        
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        
+        button:hover {
+            background: #45a049;
+        }
+        
+        button:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .danger {
+            background: #f44336;
+        }
+        
+        .danger:hover {
+            background: #da190b;
+        }
+        
+        #debug-output {
+            background: #1e1e1e;
+            color: #f0f0f0;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            margin-top: 10px;
+        }
+        
+        .url-input {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .results {
+            background: #f9f9f9;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .status.warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Debug Transcript Extractor Test</h1>
+        <p>This page helps diagnose issues with the YouTube transcript extractor.</p>
+        
+        <div class="test-section">
+            <h3>🔍 Basic Diagnostics</h3>
+            <button onclick="runDiagnostics()">Run Diagnostics</button>
+            <button onclick="testVideoIdExtraction()">Test Video ID Extraction</button>
+            <button onclick="checkEnvironment()">Check Environment</button>
+            <div id="diagnostic-results" class="results"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>🎬 Transcript Extraction Test</h3>
+            <input type="text" id="test-video-id" class="url-input" placeholder="Enter YouTube video ID (e.g., dQw4w9WgXcQ) or full URL">
+            <br>
+            <button onclick="testTranscriptExtraction()">Extract Transcript</button>
+            <button onclick="testCurrentPageExtraction()">Extract from Current Page</button>
+            <button onclick="clearResults()">Clear Results</button>
+            <div id="transcript-results" class="results"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>🌐 YouTube Page Integration Test</h3>
+            <button onclick="simulateYouTubePage()">Simulate YouTube Page</button>
+            <button onclick="testInjectionOnYouTube()">Test on Real YouTube Page</button>
+            <div id="integration-results" class="results"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>📊 Debug Output</h3>
+            <button onclick="clearDebugOutput()">Clear Output</button>
+            <button onclick="enableVerboseLogging()">Enable Verbose Logging</button>
+            <div id="debug-output"></div>
+        </div>
+    </div>
+
+    <!-- Load the debug transcript extractor -->
+    <script src="debug-transcript-extractor.js"></script>
+    
+    <script>
+        // Test functions
+        let verboseLogging = false;
+        
+        function logToDebug(message, type = 'info') {
+            const output = document.getElementById('debug-output');
+            const timestamp = new Date().toLocaleTimeString();
+            const prefix = type === 'error' ? '❌' : type === 'warning' ? '⚠️' : 'ℹ️';
+            output.textContent += `[${timestamp}] ${prefix} ${message}\n`;
+            output.scrollTop = output.scrollHeight;
+        }
+        
+        function showStatus(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+        
+        async function runDiagnostics() {
+            logToDebug('Starting comprehensive diagnostics...');
+            showStatus('diagnostic-results', 'Running diagnostics...', 'warning');
+            
+            try {
+                if (!window.debugExtractor) {
+                    throw new Error('Debug extractor not found');
+                }
+                
+                const results = await window.debugExtractor.diagnose();
+                
+                let html = '<h4>Diagnostic Results:</h4>';
+                html += `<p><strong>Video ID:</strong> ${results.videoId || 'Not found'}</p>`;
+                html += `<p><strong>YouTube Data Available:</strong> ${results.pageHasYtData ? 'Yes' : 'No'}</p>`;
+                html += `<p><strong>Current URL:</strong> ${results.url}</p>`;
+                html += `<p><strong>Timestamp:</strong> ${results.timestamp}</p>`;
+                
+                // Additional checks
+                html += '<h4>Environment Checks:</h4>';
+                html += `<p><strong>User Agent:</strong> ${navigator.userAgent}</p>`;
+                html += `<p><strong>Fetch API:</strong> ${typeof fetch !== 'undefined' ? 'Available' : 'Not available'}</p>`;
+                html += `<p><strong>AbortController:</strong> ${typeof AbortController !== 'undefined' ? 'Available' : 'Not available'}</p>`;
+                
+                document.getElementById('diagnostic-results').innerHTML = html;
+                showStatus('diagnostic-results', 'Diagnostics completed successfully!', 'success');
+                logToDebug('Diagnostics completed successfully');
+                
+            } catch (error) {
+                showStatus('diagnostic-results', `Diagnostics failed: ${error.message}`, 'error');
+                logToDebug(`Diagnostics failed: ${error.message}`, 'error');
+            }
+        }
+        
+        function testVideoIdExtraction() {
+            logToDebug('Testing video ID extraction...');
+            
+            const testUrls = [
+                'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+                'https://youtu.be/dQw4w9WgXcQ',
+                'https://www.youtube.com/embed/dQw4w9WgXcQ',
+                'dQw4w9WgXcQ'
+            ];
+            
+            let html = '<h4>Video ID Extraction Tests:</h4>';
+            
+            testUrls.forEach(url => {
+                try {
+                    const videoId = window.debugExtractor.extractVideoId(url);
+                    html += `<p><strong>${url}</strong> → ${videoId || 'FAILED'}</p>`;
+                    logToDebug(`URL: ${url} → ${videoId || 'FAILED'}`);
+                } catch (error) {
+                    html += `<p><strong>${url}</strong> → ERROR: ${error.message}</p>`;
+                    logToDebug(`URL: ${url} → ERROR: ${error.message}`, 'error');
+                }
+            });
+            
+            document.getElementById('diagnostic-results').innerHTML = html;
+        }
+        
+        function checkEnvironment() {
+            logToDebug('Checking environment...');
+            
+            let html = '<h4>Environment Check:</h4>';
+            
+            // Check if we're on YouTube
+            const isYouTube = window.location.hostname.includes('youtube.com');
+            html += `<p><strong>On YouTube:</strong> ${isYouTube ? 'Yes' : 'No'}</p>`;
+            
+            // Check for YouTube objects
+            html += `<p><strong>window.ytInitialPlayerResponse:</strong> ${window.ytInitialPlayerResponse ? 'Available' : 'Not found'}</p>`;
+            html += `<p><strong>window.ytplayer:</strong> ${window.ytplayer ? 'Available' : 'Not found'}</p>`;
+            
+            // Check debug extractor
+            html += `<p><strong>Debug Extractor:</strong> ${window.debugExtractor ? 'Loaded' : 'Not loaded'}</p>`;
+            html += `<p><strong>Test Function:</strong> ${window.testTranscriptExtraction ? 'Available' : 'Not available'}</p>`;
+            
+            document.getElementById('diagnostic-results').innerHTML = html;
+            logToDebug('Environment check completed');
+        }
+        
+        async function testTranscriptExtraction() {
+            const videoIdInput = document.getElementById('test-video-id').value.trim();
+            
+            if (!videoIdInput) {
+                showStatus('transcript-results', 'Please enter a video ID or URL', 'warning');
+                return;
+            }
+            
+            logToDebug(`Testing transcript extraction for: ${videoIdInput}`);
+            showStatus('transcript-results', 'Extracting transcript...', 'warning');
+            
+            try {
+                const transcript = await window.debugExtractor.getTranscript(videoIdInput);
+                
+                let html = `<h4>Transcript Extraction Results (${transcript.length} segments):</h4>`;
+                html += '<div style="max-height: 200px; overflow-y: auto;">';
+                
+                transcript.slice(0, 10).forEach((segment, index) => {
+                    html += `<p><strong>${segment.start.toFixed(1)}s:</strong> ${segment.text}</p>`;
+                });
+                
+                if (transcript.length > 10) {
+                    html += `<p><em>... and ${transcript.length - 10} more segments</em></p>`;
+                }
+                
+                html += '</div>';
+                
+                document.getElementById('transcript-results').innerHTML = html;
+                showStatus('transcript-results', `Successfully extracted ${transcript.length} segments!`, 'success');
+                logToDebug(`Successfully extracted ${transcript.length} transcript segments`);
+                
+            } catch (error) {
+                showStatus('transcript-results', `Extraction failed: ${error.message}`, 'error');
+                logToDebug(`Transcript extraction failed: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testCurrentPageExtraction() {
+            logToDebug('Testing current page extraction...');
+            showStatus('transcript-results', 'Extracting from current page...', 'warning');
+            
+            try {
+                const tracks = window.debugExtractor.extractTracksFromCurrentPage();
+                
+                if (tracks.length === 0) {
+                    showStatus('transcript-results', 'No tracks found on current page', 'warning');
+                    logToDebug('No tracks found on current page', 'warning');
+                    return;
+                }
+                
+                let html = `<h4>Current Page Tracks (${tracks.length} found):</h4>`;
+                tracks.forEach(track => {
+                    html += `<p><strong>${track.languageCode}</strong> (${track.name}) - ${track.isAutoGenerated ? 'Auto-generated' : 'Manual'}</p>`;
+                });
+                
+                document.getElementById('transcript-results').innerHTML = html;
+                showStatus('transcript-results', `Found ${tracks.length} tracks on current page!`, 'success');
+                logToDebug(`Found ${tracks.length} tracks on current page`);
+                
+            } catch (error) {
+                showStatus('transcript-results', `Current page extraction failed: ${error.message}`, 'error');
+                logToDebug(`Current page extraction failed: ${error.message}`, 'error');
+            }
+        }
+        
+        function simulateYouTubePage() {
+            logToDebug('Simulating YouTube page environment...');
+            
+            // Create mock YouTube data
+            window.ytInitialPlayerResponse = {
+                videoDetails: {
+                    videoId: 'dQw4w9WgXcQ',
+                    title: 'Test Video'
+                },
+                captions: {
+                    playerCaptionsTracklistRenderer: {
+                        captionTracks: [
+                            {
+                                baseUrl: 'https://www.youtube.com/api/timedtext?v=dQw4w9WgXcQ&ei=test&caps=asr&lang=en',
+                                languageCode: 'en',
+                                name: { simpleText: 'English' },
+                                kind: 'asr'
+                            }
+                        ]
+                    }
+                }
+            };
+            
+            let html = '<h4>YouTube Environment Simulated:</h4>';
+            html += '<p>✅ Created mock ytInitialPlayerResponse</p>';
+            html += '<p>✅ Added test caption tracks</p>';
+            html += '<p>Now try testing transcript extraction!</p>';
+            
+            document.getElementById('integration-results').innerHTML = html;
+            logToDebug('YouTube environment simulation completed');
+        }
+        
+        function testInjectionOnYouTube() {
+            if (!window.location.hostname.includes('youtube.com')) {
+                showStatus('integration-results', 'This test only works on YouTube pages', 'warning');
+                return;
+            }
+            
+            logToDebug('Testing injection on real YouTube page...');
+            
+            // Test if we have access to YouTube data
+            let html = '<h4>YouTube Integration Test:</h4>';
+            
+            if (window.ytInitialPlayerResponse) {
+                html += '<p>✅ ytInitialPlayerResponse available</p>';
+                
+                if (window.ytInitialPlayerResponse.captions) {
+                    const tracks = window.ytInitialPlayerResponse.captions?.playerCaptionsTracklistRenderer?.captionTracks;
+                    html += `<p>✅ Found ${tracks?.length || 0} caption tracks</p>`;
+                } else {
+                    html += '<p>❌ No captions found in ytInitialPlayerResponse</p>';
+                }
+            } else {
+                html += '<p>❌ ytInitialPlayerResponse not available</p>';
+            }
+            
+            html += `<p><strong>Current URL:</strong> ${window.location.href}</p>`;
+            
+            document.getElementById('integration-results').innerHTML = html;
+            logToDebug('YouTube integration test completed');
+        }
+        
+        function clearResults() {
+            document.getElementById('transcript-results').innerHTML = '';
+            document.getElementById('integration-results').innerHTML = '';
+            document.getElementById('diagnostic-results').innerHTML = '';
+            logToDebug('Results cleared');
+        }
+        
+        function clearDebugOutput() {
+            document.getElementById('debug-output').textContent = '';
+            logToDebug('Debug output cleared');
+        }
+        
+        function enableVerboseLogging() {
+            verboseLogging = !verboseLogging;
+            logToDebug(`Verbose logging ${verboseLogging ? 'enabled' : 'disabled'}`);
+            
+            if (window.debugExtractor) {
+                window.debugExtractor.debugMode = verboseLogging;
+            }
+        }
+        
+        // Initialize
+        window.addEventListener('load', () => {
+            logToDebug('Debug test page loaded successfully');
+            
+            if (window.debugExtractor) {
+                logToDebug('Debug extractor is available');
+            } else {
+                logToDebug('Debug extractor not found - check if script loaded correctly', 'error');
+            }
+        });
+    </script>
+</body>
+</html>

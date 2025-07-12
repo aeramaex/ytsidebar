@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Extension Test Dashboard</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .success { border-left: 4px solid #10b981; }
+        .warning { border-left: 4px solid #f59e0b; }
+        .error { border-left: 4px solid #ef4444; }
+        .code-block {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            white-space: pre-wrap;
+        }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 4px;
+        }
+        button:hover { background: #2563eb; }
+        .status { font-weight: bold; }
+        .success-status { color: #10b981; }
+        .error-status { color: #ef4444; }
+        .warning-status { color: #f59e0b; }
+    </style>
+</head>
+<body>
+    <h1>🚀 Enhanced YouTube Extension Test Dashboard</h1>
+    
+    <div class="test-card success">
+        <h2>✅ Quick Test Steps</h2>
+        <ol>
+            <li>Load extension in Chrome (<code>chrome://extensions/</code>)</li>
+            <li>Navigate to a YouTube video with captions</li>
+            <li>Click extension icon to open side panel</li>
+            <li>Verify subtitles load with highlighting and auto-scroll</li>
+        </ol>
+    </div>
+
+    <div class="test-card warning">
+        <h2>🔧 Console Test Commands</h2>
+        <p>Open DevTools Console (F12) on a YouTube video page and run:</p>
+        
+        <h3>Force Subtitle Extraction</h3>
+        <div class="code-block">window.postMessage({type: 'TRIGGER_SUBTITLE_EXTRACTION'}, '*');</div>
+        <button onclick="runTest('force')">Run Force Extraction Test</button>
+        
+        <h3>Health Check</h3>
+        <div class="code-block">chrome.runtime.sendMessage({action: 'healthCheck'}, response => console.log('Health:', response));</div>
+        <button onclick="runTest('health')">Run Health Check</button>
+        
+        <h3>Check Extension State</h3>
+        <div class="code-block">console.log('Extension loaded:', !!document.querySelector('script[data-sidepanel-injected]'));</div>
+        <button onclick="runTest('state')">Check Extension State</button>
+    </div>
+
+    <div class="test-card">
+        <h2>📝 Test Results</h2>
+        <div id="test-results">
+            <p>Click the test buttons above to see results here.</p>
+        </div>
+    </div>
+
+    <div class="test-card">
+        <h2>🎯 Expected Log Output (Success)</h2>
+        <div class="code-block">🚀 Enhanced YouTube content script loading...
+🌐 Page fully loaded, extension should be active
+🔄 URL changed from ... to https://www.youtube.com/watch?v=...
+📺 Video page detected, requesting subtitle extraction
+🚀 Enhanced YouTube subtitle extractor initialized
+🎬 Starting enhanced loadCaptions...
+✅ Got captions from [method]
+📄 Received text length: [number]
+✅ Successfully parsed [number] captions
+✅ Video time tracking started</div>
+    </div>
+
+    <div class="test-card error">
+        <h2>🐛 Common Issues & Solutions</h2>
+        <ul>
+            <li><strong>No subtitles loading:</strong> Try different videos, some may block API access</li>
+            <li><strong>Extension not injecting:</strong> Check manifest.json and reload extension</li>
+            <li><strong>Highlighting not working:</strong> Ensure video is playing and CSS is loaded</li>
+            <li><strong>Side panel not opening:</strong> Click extension icon, check permissions</li>
+        </ul>
+    </div>
+
+    <div class="test-card success">
+        <h2>🌟 New Enhanced Features</h2>
+        <ul>
+            <li><strong>Multi-method extraction:</strong> 5 different approaches for maximum compatibility</li>
+            <li><strong>Real-time highlighting:</strong> Current subtitle highlighted with smooth animations</li>
+            <li><strong>Auto-scroll:</strong> Panel automatically follows video position</li>
+            <li><strong>Better error handling:</strong> Clear messages for debugging</li>
+            <li><strong>Network interception:</strong> Captures subtitle URLs like working extensions</li>
+        </ul>
+    </div>
+
+    <script>
+        function runTest(testType) {
+            const resultsDiv = document.getElementById('test-results');
+            
+            switch(testType) {
+                case 'force':
+                    resultsDiv.innerHTML = `
+                        <div class="status warning-status">⚠️ Test Command:</div>
+                        <div class="code-block">window.postMessage({type: 'TRIGGER_SUBTITLE_EXTRACTION'}, '*');</div>
+                        <p>Run this in the console on a YouTube video page. Check for extraction logs.</p>
+                    `;
+                    break;
+                    
+                case 'health':
+                    resultsDiv.innerHTML = `
+                        <div class="status warning-status">⚠️ Test Command:</div>
+                        <div class="code-block">chrome.runtime.sendMessage({action: 'healthCheck'}, response => console.log('Health:', response));</div>
+                        <p>This checks if the background script is responding. Look for response in console.</p>
+                    `;
+                    break;
+                    
+                case 'state':
+                    resultsDiv.innerHTML = `
+                        <div class="status warning-status">⚠️ Test Command:</div>
+                        <div class="code-block">console.log('Extension loaded:', !!document.querySelector('script[data-sidepanel-injected]'));</div>
+                        <p>Should return 'true' if the injection script is loaded on the page.</p>
+                    `;
+                    break;
+            }
+        }
+        
+        // Auto-check if we're on a valid test page
+        if (window.location.hostname.includes('youtube.com')) {
+            document.body.style.background = '#dcfce7';
+            const header = document.querySelector('h1');
+            header.innerHTML = '🎯 Running on YouTube - Extension Should Be Active!';
+            header.style.color = '#15803d';
+        }
+    </script>
+</body>
+</html>

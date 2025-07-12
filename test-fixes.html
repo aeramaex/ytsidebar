@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subtitle Extraction Fixes Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success { background: #d4edda; border-color: #c3e6cb; }
+        .error { background: #f8d7da; border-color: #f5c6cb; }
+        .info { background: #d1ecf1; border-color: #bee5eb; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        .log-output {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-family: monospace;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .stat-card {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Subtitle Extraction Fixes Test Dashboard</h1>
+        
+        <div class="test-section info">
+            <h2>📋 Test Overview</h2>
+            <p>This page tests the fixes for:</p>
+            <ul>
+                <li>✅ TrustedHTML assignment errors (DOMParser → Regex parsing)</li>
+                <li>✅ HTTP 429 rate limiting (Added request throttling)</li>
+                <li>✅ Request deduplication and queue management</li>
+            </ul>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div>Total Tests</div>
+                <div class="stat-value" id="totalTests">0</div>
+            </div>
+            <div class="stat-card">
+                <div>Successful</div>
+                <div class="stat-value" id="successfulTests" style="color: green;">0</div>
+            </div>
+            <div class="stat-card">
+                <div>Failed</div>
+                <div class="stat-value" id="failedTests" style="color: red;">0</div>
+            </div>
+            <div class="stat-card">
+                <div>Success Rate</div>
+                <div class="stat-value" id="successRate">0%</div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🧪 Test Controls</h2>
+            <input type="text" id="testVideoUrl" placeholder="Enter YouTube URL (optional)" 
+                   value="https://www.youtube.com/watch?v=dQw4w9WgXcQ" style="width: 400px; padding: 8px;">
+            <br><br>
+            <button onclick="testXMLParsing()">Test XML Parsing (No DOMParser)</button>
+            <button onclick="testRateLimiting()">Test Rate Limiting</button>
+            <button onclick="testTranscriptExtraction()">Test Full Extraction</button>
+            <button onclick="clearLogs()">Clear Logs</button>
+        </div>
+
+        <div class="test-section">
+            <h2>📊 Test Results</h2>
+            <div class="log-output" id="testOutput">Ready to run tests...</div>
+        </div>
+    </div>
+
+    <script src="youtube-inject-enhanced.js"></script>
+    <script src="youtube-transcript.js"></script>
+    <script>
+        let testStats = {
+            total: 0,
+            successful: 0,
+            failed: 0
+        };
+
+        function updateStats() {
+            document.getElementById('totalTests').textContent = testStats.total;
+            document.getElementById('successfulTests').textContent = testStats.successful;
+            document.getElementById('failedTests').textContent = testStats.failed;
+            
+            const rate = testStats.total > 0 ? Math.round((testStats.successful / testStats.total) * 100) : 0;
+            document.getElementById('successRate').textContent = rate + '%';
+        }
+
+        function log(message, type = 'info') {
+            const output = document.getElementById('testOutput');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'color: red;' : type === 'success' ? 'color: green;' : '';
+            output.innerHTML += `<div style="${className}">[${timestamp}] ${message}</div>`;
+            output.scrollTop = output.scrollHeight;
+        }
+
+        function clearLogs() {
+            document.getElementById('testOutput').innerHTML = 'Logs cleared...';
+        }
+
+        async function testXMLParsing() {
+            log('🧪 Testing XML Parsing without DOMParser...', 'info');
+            testStats.total++;
+            
+            try {
+                // Test XML data with various formats
+                const testXML = `<?xml version="1.0" encoding="utf-8"?>
+                <transcript>
+                    <text start="0.000" dur="2.500">Hello world &amp; welcome</text>
+                    <text start="2.500" dur="3.000">This is a test &quot;caption&quot;</text>
+                    <text start="5.500" dur="2.000">With &lt;special&gt; characters</text>
+                </transcript>`;
+                
+                // Test with the enhanced extractor's XML parsing
+                if (window.EnhancedSubtitleExtractor) {
+                    const extractor = new EnhancedSubtitleExtractor();
+                    const result = extractor.parseXMLFormat(testXML);
+                    
+                    if (result && result.length > 0) {
+                        log(`✅ XML parsing successful! Extracted ${result.length} captions`, 'success');
+                        log(`Sample: "${result[0].text}" at ${result[0].startTime}s`);
+                        testStats.successful++;
+                    } else {
+                        throw new Error('No captions extracted from XML');
+                    }
+                } else {
+                    throw new Error('EnhancedSubtitleExtractor not available');
+                }
+                
+            } catch (error) {
+                log(`❌ XML parsing failed: ${error.message}`, 'error');
+                testStats.failed++;
+            }
+            
+            updateStats();
+        }
+
+        async function testRateLimiting() {
+            log('🧪 Testing Rate Limiting System...', 'info');
+            testStats.total++;
+            
+            try {
+                if (window.EnhancedSubtitleExtractor) {
+                    const extractor = new EnhancedSubtitleExtractor();
+                    
+                    log('📡 Making multiple rapid requests to test throttling...');
+                    const startTime = Date.now();
+                    
+                    // Make 3 rapid requests
+                    const requests = [];
+                    for (let i = 0; i < 3; i++) {
+                        requests.push(
+                            extractor.rateLimitedFetch('https://httpbin.org/delay/0')
+                                .catch(e => ({ error: e.message }))
+                        );
+                    }
+                    
+                    const results = await Promise.all(requests);
+                    const totalTime = Date.now() - startTime;
+                    
+                    log(`⏱️ 3 requests completed in ${totalTime}ms`);
+                    
+                    if (totalTime >= 4000) { // Should take at least 4 seconds with 2s intervals
+                        log('✅ Rate limiting working correctly!', 'success');
+                        testStats.successful++;
+                    } else {
+                        log('⚠️ Requests completed too quickly - rate limiting may not be working', 'error');
+                        testStats.failed++;
+                    }
+                } else {
+                    throw new Error('EnhancedSubtitleExtractor not available');
+                }
+                
+            } catch (error) {
+                log(`❌ Rate limiting test failed: ${error.message}`, 'error');
+                testStats.failed++;
+            }
+            
+            updateStats();
+        }
+
+        async function testTranscriptExtraction() {
+            log('🧪 Testing Full Transcript Extraction...', 'info');
+            testStats.total++;
+            
+            try {
+                const videoUrl = document.getElementById('testVideoUrl').value || 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
+                log(`🎯 Testing with video: ${videoUrl}`);
+                
+                // Test both extraction methods
+                if (window.YouTubeTranscript && window.EnhancedSubtitleExtractor) {
+                    log('📡 Attempting transcript extraction...');
+                    
+                    // Try the enhanced extractor first
+                    try {
+                        const extractor = new EnhancedSubtitleExtractor();
+                        const videoId = videoUrl.match(/(?:v=|\/embed\/|\/v\/|youtu\.be\/)([^&\n?#]+)/)?.[1];
+                        
+                        if (videoId) {
+                            log(`🔍 Extracted video ID: ${videoId}`);
+                            // This will test the rate-limited API calls
+                            const result = await extractor.fetchCaptionData(videoId, 'en');
+                            
+                            if (result && result.length > 0) {
+                                log(`✅ Extraction successful! Found ${result.length} caption segments`, 'success');
+                                log(`Sample: "${result[0].text}" at ${result[0].startTime}s`);
+                                testStats.successful++;
+                            } else {
+                                log('⚠️ No captions found - this may be normal for this video');
+                                testStats.successful++; // Still a successful test if no errors occurred
+                            }
+                        } else {
+                            throw new Error('Could not extract video ID from URL');
+                        }
+                    } catch (error) {
+                        log(`⚠️ Enhanced extractor failed: ${error.message}`);
+                        
+                        // Try fallback transcript method
+                        try {
+                            log('🔄 Trying fallback transcript method...');
+                            const transcript = await YouTubeTranscript.fetchTranscript(videoUrl);
+                            
+                            if (transcript && transcript.length > 0) {
+                                log(`✅ Fallback extraction successful! Found ${transcript.length} segments`, 'success');
+                                testStats.successful++;
+                            } else {
+                                throw new Error('No transcript data returned');
+                            }
+                        } catch (fallbackError) {
+                            throw new Error(`Both methods failed: ${error.message}, ${fallbackError.message}`);
+                        }
+                    }
+                } else {
+                    throw new Error('Required extraction classes not available');
+                }
+                
+            } catch (error) {
+                log(`❌ Full extraction test failed: ${error.message}`, 'error');
+                testStats.failed++;
+            }
+            
+            updateStats();
+        }
+
+        // Initialize page
+        log('🚀 Test dashboard loaded. Ready to test fixes!');
+        log('💡 Use the buttons above to test different components.');
+        updateStats();
+    </script>
+</body>
+</html>

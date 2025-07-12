@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Transcript Test - Quick Validation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            border-left: 4px solid #007bff;
+        }
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn:hover { background: #0056b3; }
+        .btn:disabled { background: #ccc; cursor: not-allowed; }
+        .output {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .success { background: #d4edda; border-color: #c3e6cb; }
+        .error { background: #f8d7da; border-color: #f5c6cb; }
+        .loading { color: #007bff; }
+        input {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎬 YouTube Transcript Extractor - Quick Test</h1>
+        <p>Testing the new working implementation based on proven GitHub patterns.</p>
+        
+        <div class="test-section">
+            <h3>🧪 Quick Test</h3>
+            <input type="text" id="videoInput" placeholder="Enter YouTube video ID or URL" value="dQw4w9WgXcQ">
+            <button class="btn" onclick="quickTest()">Test Extract</button>
+            <button class="btn" onclick="clearOutput()">Clear</button>
+            <div id="output" class="output" style="display: none;"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>🎯 Popular Video Tests</h3>
+            <button class="btn" onclick="testVideo('dQw4w9WgXcQ')">Rick Roll</button>
+            <button class="btn" onclick="testVideo('jNQXAC9IVRw')">First YouTube Video</button>
+            <button class="btn" onclick="testVideo('kJQP7kiw5Fk')">Despacito</button>
+            <button class="btn" onclick="testVideo('YQHsXMglC9A')">Adele - Hello</button>
+        </div>
+        
+        <div class="test-section">
+            <h3>📊 Status</h3>
+            <p id="status">Ready to test...</p>
+            <p><strong>Success Rate:</strong> <span id="successRate">0%</span></p>
+            <p><strong>Tests Run:</strong> <span id="testCount">0</span></p>
+        </div>
+    </div>
+
+    <!-- Load the working implementation -->
+    <script src="youtube-inject-fixed.js"></script>
+    
+    <script>
+        let extractor;
+        let stats = { tests: 0, successes: 0 };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                extractor = new YouTubeTranscriptExtractor();
+                updateStatus('✅ Extractor loaded successfully!');
+            } catch (error) {
+                updateStatus('❌ Failed to load extractor: ' + error.message);
+            }
+        });
+
+        function updateStatus(message) {
+            document.getElementById('status').textContent = message;
+        }
+
+        function updateStats() {
+            const rate = stats.tests > 0 ? Math.round((stats.successes / stats.tests) * 100) : 0;
+            document.getElementById('successRate').textContent = rate + '%';
+            document.getElementById('testCount').textContent = stats.tests;
+        }
+
+        async function quickTest() {
+            const videoInput = document.getElementById('videoInput').value.trim();
+            if (!videoInput) {
+                updateStatus('❌ Please enter a video ID or URL');
+                return;
+            }
+            
+            await testVideo(videoInput);
+        }
+
+        async function testVideo(videoIdOrUrl) {
+            const output = document.getElementById('output');
+            output.style.display = 'block';
+            output.className = 'output loading';
+            output.textContent = '🔄 Testing extraction...';
+            
+            stats.tests++;
+            updateStats();
+            updateStatus(`🔄 Testing: ${videoIdOrUrl}`);
+
+            try {
+                const videoId = extractor.extractVideoId(videoIdOrUrl);
+                if (!videoId) {
+                    throw new Error('Invalid video ID or URL');
+                }
+
+                console.log(`Testing video: ${videoId}`);
+                const startTime = performance.now();
+                
+                const transcript = await extractor.getTranscript(videoId);
+                
+                const endTime = performance.now();
+                const duration = Math.round(endTime - startTime);
+
+                if (transcript && transcript.length > 0) {
+                    stats.successes++;
+                    updateStats();
+                    
+                    let result = `✅ SUCCESS! (${duration}ms)\n\n`;
+                    result += `Video ID: ${videoId}\n`;
+                    result += `Segments: ${transcript.length}\n`;
+                    result += `Duration: ${Math.round(transcript[transcript.length - 1]?.start || 0)}s\n\n`;
+                    result += `Sample transcript:\n`;
+                    result += '─'.repeat(50) + '\n';
+                    
+                    transcript.slice(0, 5).forEach((item, i) => {
+                        const time = Math.floor(item.start);
+                        result += `[${time}s] ${item.text}\n`;
+                    });
+                    
+                    if (transcript.length > 5) {
+                        result += `... and ${transcript.length - 5} more segments\n`;
+                    }
+                    
+                    output.className = 'output success';
+                    output.textContent = result;
+                    updateStatus(`✅ Success! ${transcript.length} segments extracted`);
+                    
+                } else {
+                    throw new Error('No transcript data returned');
+                }
+
+            } catch (error) {
+                output.className = 'output error';
+                output.textContent = `❌ FAILED: ${error.message}\n\nThis could mean:\n• Video has no captions\n• Captions are disabled\n• Rate limiting (try again)\n• Network issue`;
+                updateStatus(`❌ Failed: ${error.message}`);
+                console.error('Test failed:', error);
+            }
+        }
+
+        function clearOutput() {
+            const output = document.getElementById('output');
+            output.style.display = 'none';
+            output.textContent = '';
+            output.className = 'output';
+            updateStatus('Ready to test...');
+        }
+
+        // Test on page load
+        setTimeout(() => {
+            if (extractor) {
+                updateStatus('🎯 Ready! Try testing a video above.');
+            }
+        }, 1000);
+    </script>
+</body>
+</html>

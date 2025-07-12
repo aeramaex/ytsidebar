@@ -1,0 +1,42 @@
+{
+  "manifest_version": 3,
+  "name": "SidePanel AI - Standalone",
+  "version": "1.0",
+  "description": "An AI-powered YouTube transcript viewer that opens in the side panel.",
+  "permissions": ["sidePanel", "tabs", "scripting", "activeTab", "storage", "webRequest", "webNavigation"],
+  "host_permissions": ["*://*.youtube.com/*", "https://*/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://*.youtube.com/watch*", "*://*.youtube.com/shorts/*"],
+      "js": ["content.js"]
+    }
+  ],
+  "action": {
+    "default_title": "Open SidePanel AI",
+    "default_icon": "icon.png"
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "styles.css", 
+        "youtube-inject-enhanced.js", 
+        "youtube-inject.js",
+        "youtube-transcript.js",
+        "youtube-subtitle-tester.js",
+        "youtube-analytics.js",
+        "youtube-system-integration.js",
+        "debug-transcript-extractor.js",
+        "fixed-transcript-extractor-new.js",
+        "testing-dashboard.html",
+        "debug-test.html"
+      ],
+      "matches": ["*://*.youtube.com/*"]
+    }
+  ]
+}

@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transcript Extraction Debugger</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            margin: 20px;
+            background: #1a1a1a;
+            color: #00ff00;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #000;
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid #00ff00;
+        }
+        h1 {
+            color: #00ff00;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .debug-section {
+            background: #111;
+            border: 1px solid #333;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+        .debug-section h3 {
+            color: #ffff00;
+            margin-top: 0;
+        }
+        button {
+            background: #00ff00;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover {
+            background: #00cc00;
+        }
+        button:disabled {
+            background: #666;
+            color: #999;
+            cursor: not-allowed;
+        }
+        #debug-output {
+            background: #000;
+            border: 1px solid #333;
+            padding: 15px;
+            height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #00ff00;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .status.success { background: #004400; color: #00ff00; }
+        .status.error { background: #440000; color: #ff0000; }
+        .status.warning { background: #444400; color: #ffff00; }
+        .status.info { background: #000044; color: #0088ff; }
+        input {
+            background: #333;
+            color: #fff;
+            border: 1px solid #666;
+            padding: 8px;
+            margin: 5px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+        .quick-tests {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔬 Transcript Extraction Debugger</h1>
+        <div id="status" class="status info">Loading debugger...</div>
+        
+        <div class="debug-section">
+            <h3>🎯 Quick Tests</h3>
+            <div class="quick-tests">
+                <button onclick="runDiagnostic()">🔬 Run Diagnostic</button>
+                <button onclick="testCurrentPage()">📄 Test Current Page</button>
+                <button onclick="testKnownVideo()">🎬 Test Known Video</button>
+                <button onclick="testVideoId()">🆔 Test Custom Video</button>
+                <button onclick="clearLog()">🗑️ Clear Log</button>
+            </div>
+            
+            <div style="margin-top: 15px;">
+                <input type="text" id="customVideoId" placeholder="Enter video ID (e.g., dQw4w9WgXcQ)" style="width: 300px;">
+                <button onclick="testCustomVideo()">Test This Video</button>
+            </div>
+        </div>
+        
+        <div class="debug-section">
+            <h3>📊 Live Debug Output</h3>
+            <div id="debug-output">Initializing debugger...\n</div>
+        </div>
+        
+        <div class="debug-section">
+            <h3>🧪 Manual Testing</h3>
+            <p>Open browser console (F12) and run these commands:</p>
+            <div style="background: #222; padding: 10px; border-radius: 5px; margin: 10px 0;">
+                <code>
+                // Test transcript extraction<br>
+                testFixedExtraction();<br><br>
+                
+                // Test with specific video ID<br>
+                testFixedExtraction('dQw4w9WgXcQ');<br><br>
+                
+                // Run diagnostic<br>
+                fixedExtractor.diagnose();<br><br>
+                
+                // Check current page data<br>
+                fixedExtractor.extractCaptionTracks();
+                </code>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load the FIXED extractor -->
+    <script src="fixed-transcript-extractor.js"></script>
+    
+    <script>
+        let debugLog = '';
+        
+        function updateStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+        }
+
+        function addToLog(message) {
+            debugLog += message + '\n';
+            const debugOutput = document.getElementById('debug-output');
+            debugOutput.textContent = debugLog;
+            debugOutput.scrollTop = debugOutput.scrollHeight;
+        }
+
+        async function runDiagnostic() {
+            updateStatus('🔬 Running diagnostic...', 'info');
+            addToLog('\n=== DIAGNOSTIC STARTED ===');
+            
+            try {
+                const result = await window.fixedExtractor.diagnose();
+                addToLog('✅ Diagnostic completed');
+                addToLog(JSON.stringify(result, null, 2));
+                updateStatus('✅ Diagnostic completed - check log below', 'success');
+            } catch (error) {
+                addToLog('❌ Diagnostic failed: ' + error.message);
+                updateStatus('❌ Diagnostic failed', 'error');
+            }
+        }
+
+        async function testCurrentPage() {
+            updateStatus('📄 Testing current page...', 'info');
+            addToLog('\n=== TESTING CURRENT PAGE ===');
+            
+            try {
+                const tracks = window.fixedExtractor.extractCaptionTracks();
+                addToLog(`Found ${tracks.length} tracks on current page`);
+                
+                if (tracks.length > 0) {
+                    addToLog('Available tracks:');
+                    tracks.forEach((track, i) => {
+                        addToLog(`  ${i + 1}. ${track.languageCode} - ${track.name}`);
+                    });
+                    updateStatus(`✅ Found ${tracks.length} caption tracks`, 'success');
+                } else {
+                    addToLog('❌ No tracks found on current page');
+                    updateStatus('❌ No caption tracks found', 'warning');
+                }
+            } catch (error) {
+                addToLog('❌ Current page test failed: ' + error.message);
+                updateStatus('❌ Current page test failed', 'error');
+            }
+        }
+
+        async function testKnownVideo() {
+            updateStatus('🎬 Testing known video...', 'info');
+            addToLog('\n=== TESTING KNOWN VIDEO (Rick Roll) ===');
+            
+            try {
+                const transcript = await window.testFixedExtraction('dQw4w9WgXcQ');
+                if (transcript && transcript.length > 0) {
+                    addToLog(`✅ Successfully extracted ${transcript.length} segments`);
+                    addToLog('First few segments:');
+                    transcript.slice(0, 3).forEach(seg => {
+                        addToLog(`  [${Math.floor(seg.start)}s] ${seg.text.substring(0, 50)}...`);
+                    });
+                    updateStatus(`✅ Extracted ${transcript.length} segments`, 'success');
+                } else {
+                    addToLog('❌ No transcript data returned');
+                    updateStatus('❌ Extraction failed', 'error');
+                }
+            } catch (error) {
+                addToLog('❌ Known video test failed: ' + error.message);
+                updateStatus('❌ Extraction failed', 'error');
+            }
+        }
+
+        async function testVideoId() {
+            const videoId = window.fixedExtractor.extractVideoId();
+            if (!videoId) {
+                updateStatus('❌ No video ID found on current page', 'error');
+                addToLog('❌ Could not extract video ID from current page');
+                return;
+            }
+            
+            updateStatus(`🆔 Testing detected video ID: ${videoId}`, 'info');
+            addToLog(`\n=== TESTING DETECTED VIDEO ID: ${videoId} ===`);
+            
+            try {
+                const transcript = await window.testFixedExtraction(videoId);
+                if (transcript && transcript.length > 0) {
+                    addToLog(`✅ Successfully extracted ${transcript.length} segments`);
+                    updateStatus(`✅ Extracted ${transcript.length} segments`, 'success');
+                } else {
+                    addToLog('❌ No transcript data returned');
+                    updateStatus('❌ Extraction failed', 'error');
+                }
+            } catch (error) {
+                addToLog('❌ Video ID test failed: ' + error.message);
+                updateStatus('❌ Extraction failed', 'error');
+            }
+        }
+
+        async function testCustomVideo() {
+            const videoId = document.getElementById('customVideoId').value.trim();
+            if (!videoId) {
+                updateStatus('❌ Please enter a video ID', 'error');
+                return;
+            }
+            
+            updateStatus(`🎬 Testing custom video: ${videoId}`, 'info');
+            addToLog(`\n=== TESTING CUSTOM VIDEO: ${videoId} ===`);
+            
+            try {
+                const transcript = await window.testFixedExtraction(videoId);
+                if (transcript && transcript.length > 0) {
+                    addToLog(`✅ Successfully extracted ${transcript.length} segments`);
+                    updateStatus(`✅ Extracted ${transcript.length} segments`, 'success');
+                } else {
+                    addToLog('❌ No transcript data returned');
+                    updateStatus('❌ Extraction failed', 'error');
+                }
+            } catch (error) {
+                addToLog('❌ Custom video test failed: ' + error.message);
+                updateStatus('❌ Extraction failed', 'error');
+            }
+        }
+
+        function clearLog() {
+            debugLog = '';
+            document.getElementById('debug-output').textContent = 'Log cleared.\n';
+            updateStatus('🗑️ Debug log cleared', 'info');
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            updateStatus('✅ Debugger loaded - ready for testing!', 'success');
+            addToLog('🚀 Debug transcript extractor loaded and ready!');
+            addToLog('📖 Use the buttons above to run tests, or check browser console for more details.');
+        });
+
+        // Auto-run diagnostic after a short delay
+        setTimeout(() => {
+            runDiagnostic();
+        }, 2000);
+    </script>
+</body>
+</html>

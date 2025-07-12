@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Transcript Extension - Final Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+        .status {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .button {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+            border: none;
+            padding: 15px 30px;
+            color: white;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+            transition: transform 0.2s;
+        }
+        .button:hover {
+            transform: translateY(-2px);
+        }
+        .success { color: #4ecdc4; }
+        .error { color: #ff6b6b; }
+        .warning { color: #ffe66d; }
+        .log {
+            background: #2c3e50;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin: 20px 0;
+        }
+        pre {
+            margin: 0;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 YouTube Transcript Extension</h1>
+        <h2>Final Validation Test</h2>
+        
+        <div class="status">
+            <h3>Extension Status:</h3>
+            <div id="status">Initializing...</div>
+        </div>
+
+        <div class="status">
+            <h3>Quick Actions:</h3>
+            <button class="button" onclick="runFullTest()">🧪 Run Full Test</button>
+            <button class="button" onclick="testOnYouTube()">📺 Test on YouTube</button>
+            <button class="button" onclick="runDiagnostics()">🔍 Run Diagnostics</button>
+            <button class="button" onclick="clearLog()">🗑️ Clear Log</button>
+        </div>
+
+        <div class="status">
+            <h3>Instructions:</h3>
+            <ol>
+                <li><strong>Load Extension:</strong> Load this extension in Chrome (chrome://extensions/)</li>
+                <li><strong>Visit YouTube:</strong> Go to any YouTube video with captions</li>
+                <li><strong>Test Extraction:</strong> Click "Test on YouTube" button</li>
+                <li><strong>Check Results:</strong> View extraction results in the log below</li>
+            </ol>
+        </div>
+
+        <div class="status">
+            <h3>Console Log:</h3>
+            <div id="log" class="log">
+                <pre id="logContent">Waiting for test results...</pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Enhanced logging
+        const originalLog = console.log;
+        const logElement = document.getElementById('logContent');
+        
+        function addToLog(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const colorClass = type === 'error' ? 'error' : type === 'success' ? 'success' : type === 'warning' ? 'warning' : '';
+            const logEntry = `[${timestamp}] ${message}\n`;
+            
+            if (logElement) {
+                logElement.innerHTML += `<span class="${colorClass}">${logEntry}</span>`;
+                logElement.scrollTop = logElement.scrollHeight;
+            }
+        }
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            const message = args.join(' ');
+            
+            let type = 'info';
+            if (message.includes('❌') || message.includes('Error')) type = 'error';
+            else if (message.includes('✅') || message.includes('Success')) type = 'success';
+            else if (message.includes('⚠️') || message.includes('Warning')) type = 'warning';
+            
+            addToLog(message, type);
+        };
+
+        // Test functions
+        async function runFullTest() {
+            addToLog('🧪 Starting full extension test...', 'info');
+            
+            try {
+                if (typeof window.runExtensionTests === 'function') {
+                    const results = await window.runExtensionTests();
+                    addToLog(`✅ Full test completed: ${results.passed}/${results.total} passed`, 'success');
+                    updateStatus(`Tests: ${results.passed}/${results.total} passed`);
+                } else {
+                    addToLog('❌ Test suite not loaded. Load the extension first.', 'error');
+                    updateStatus('Extension not loaded');
+                }
+            } catch (error) {
+                addToLog(`❌ Test failed: ${error.message}`, 'error');
+                updateStatus('Test failed');
+            }
+        }
+
+        function testOnYouTube() {
+            const isYouTube = window.location.hostname.includes('youtube.com');
+            
+            if (!isYouTube) {
+                addToLog('📺 Opening YouTube test page...', 'info');
+                window.open('https://www.youtube.com/watch?v=dQw4w9WgXcQ', '_blank');
+                addToLog('💡 Click the extension icon or test buttons on the YouTube page', 'warning');
+            } else {
+                addToLog('🎬 Testing on current YouTube page...', 'info');
+                if (typeof window.testSubtitles === 'function') {
+                    window.testSubtitles().then(result => {
+                        addToLog(`✅ YouTube test completed: ${result.subtitles?.length || 0} subtitles`, 'success');
+                    }).catch(error => {
+                        addToLog(`❌ YouTube test failed: ${error.message}`, 'error');
+                    });
+                } else {
+                    addToLog('❌ Extension not active on this page', 'error');
+                }
+            }
+        }
+
+        function runDiagnostics() {
+            addToLog('🔍 Running diagnostics...', 'info');
+            
+            if (typeof window.runDiagnostics === 'function') {
+                window.runDiagnostics();
+                addToLog('✅ Diagnostics complete - check console for details', 'success');
+            } else {
+                addToLog('❌ Diagnostics not available. Load extension first.', 'error');
+            }
+        }
+
+        function clearLog() {
+            if (logElement) {
+                logElement.innerHTML = 'Log cleared...\n';
+            }
+        }
+
+        function updateStatus(message) {
+            const statusElement = document.getElementById('status');
+            if (statusElement) {
+                statusElement.innerHTML = message;
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            addToLog('🚀 YouTube Transcript Extension Test Page Loaded', 'info');
+            addToLog('💡 Load the extension in Chrome and visit a YouTube video to test', 'warning');
+            updateStatus('Ready for testing');
+            
+            // Check if we're on YouTube
+            if (window.location.hostname.includes('youtube.com')) {
+                addToLog('🎬 YouTube page detected!', 'success');
+                updateStatus('On YouTube - ready to test');
+            }
+        });
+    </script>
+
+    <!-- Load test suite -->
+    <script src="extension-test-suite.js"></script>
+</body>
+</html>

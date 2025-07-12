@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SidePanel AI</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="font-inter antialiased">
+  <div id="app" class="flex flex-col h-screen bg-background text-foreground relative">
+    <!-- Header -->
+    <header class="flex items-center justify-between p-3 h-14 shrink-0 border-b glass">
+      <div class="flex items-center gap-2 min-w-0 flex-1">
+        <div class="flex items-center gap-2">
+          <!-- Enhanced Logo -->
+          <div class="logo-icon w-4 h-4 p-0.5">
+            <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364-.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+            </svg>
+          </div>
+          <div class="min-w-0 flex-1">
+            <div id="current-model" class="text-xs font-medium text-foreground truncate">No model selected</div>
+            <div id="current-provider" class="text-xs text-muted truncate">Configure in settings</div>
+          </div>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 shrink-0">
+        <button id="theme-toggle" class="header-btn p-2" title="Toggle theme">
+          <!-- Sun icon - shown in dark mode -->
+          <svg id="sun-icon" class="w-4 h-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+          </svg>
+          <!-- Moon icon - shown in light mode -->
+          <svg id="moon-icon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+          </svg>
+        </button>
+        <button id="settings-btn" class="header-btn p-2" title="Open settings">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100-4m0 4v2m0-6V4"></path>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-hidden">
+      <!-- Home View -->
+      <div id="home-view" class="h-full flex flex-col">
+        <!-- Controls Section -->
+        <div class="p-4 space-y-3 border-b glass">
+          <!-- Timestamp Navigation Dropdown -->
+          <div>
+            <div class="relative w-full">
+              <select id="timestamp-dropdown" class="input-primary w-full px-3 py-2.5 pr-8 rounded-lg text-sm font-medium appearance-none" disabled title="Select timestamp to jump to">
+                <option value="">Select a timestamp to jump to...</option>
+              </select>
+              <svg class="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+              </svg>
+            </div>
+          </div>
+          
+          <!-- Search Input -->
+          <div class="relative">
+            <div class="absolute left-3 top-1/2 -translate-y-1/2 translate-y-[2px] flex items-center justify-center pointer-events-none z-10">
+              <svg class="w-4 h-4 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+              </svg>
+            </div>
+            <input 
+              id="search-transcript" 
+              type="text" 
+              placeholder="Search in transcript..." 
+              class="input-primary w-full pl-12 pr-3 rounded-lg text-sm font-medium"
+              disabled
+            >
+          </div>
+          
+          <!-- Auto-scroll and Show Timestamps -->
+          <div class="flex items-center justify-between py-1">
+            <label class="flex items-center space-x-2 cursor-pointer">
+              <input type="checkbox" id="auto-scroll" checked class="w-4 h-4 rounded border-2 border-primary text-primary focus:ring-primary">
+              <span class="text-sm font-medium">Auto-Scroll</span>
+            </label>
+            <label class="flex items-center space-x-2 cursor-pointer">
+              <input type="checkbox" id="show-timestamps" checked class="w-4 h-4 rounded border-2 border-primary text-primary focus:ring-primary">
+              <span class="text-sm font-medium">Show Timestamps</span>
+            </label>
+          </div>
+          
+          <!-- Language and Translate -->
+          <div class="flex gap-3">
+            <select id="target-language" class="input-primary flex-1 px-3 py-2.5 rounded-lg text-sm font-medium" disabled title="Select target language">
+              <option value="English">English</option>
+              <option value="Spanish">Spanish</option>
+              <option value="French">French</option>
+              <option value="German">German</option>
+              <option value="Japanese">Japanese</option>
+              <option value="Korean">Korean</option>
+              <option value="Chinese">Chinese</option>
+              <option value="Portuguese">Portuguese</option>
+              <option value="Russian">Russian</option>
+              <option value="Italian">Italian</option>
+              <option value="Arabic">Arabic</option>
+              <option value="Hindi">Hindi</option>
+            </select>
+            <button id="translate-btn" class="btn-secondary px-4 py-2.5 rounded-lg text-sm font-medium disabled:opacity-50 whitespace-nowrap" disabled>
+              Translate
+            </button>
+          </div>
+        </div>
+
+        <!-- Transcript Section -->
+        <div class="flex-1 overflow-auto">
+          <div id="transcript-container" class="p-4 space-y-2">
+            <div id="no-transcript" class="text-center text-muted py-20">
+              <div class="mb-6">
+                <svg class="w-16 h-16 mx-auto text-muted opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+              </div>
+              <h3 class="text-lg font-semibold text-foreground mb-2">No transcript loaded</h3>
+              <p class="text-sm text-foreground-secondary px-4">Navigate to a YouTube video to automatically load the transcript.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI Input Section - Fixed at bottom -->
+        <div class="p-4 border-t glass">
+          <div class="space-y-3">
+            <div class="flex gap-3">
+              <input 
+                id="ai-question" 
+                type="text" 
+                placeholder="Ask AI about the video content..." 
+                class="input-primary flex-1 px-3 py-2.5 rounded-lg text-sm font-medium"
+                disabled
+              >
+              <button id="ask-ai" class="btn-primary px-4 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap" disabled>
+                Ask AI
+              </button>
+            </div>
+            <p class="text-xs text-center text-muted font-medium">
+              Load a transcript to ask the AI questions. Leave blank for an automatic summary.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Settings View -->
+      <div id="settings-view" class="h-full flex-col hidden">
+        <!-- Settings Header -->
+        <div class="p-4 border-b glass">
+          <div class="flex items-center gap-3">
+            <button id="back-to-home" class="p-2 rounded-lg hover:bg-background-secondary transition-colors" title="Back to home">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+              </svg>
+            </button>
+            <div>
+              <h2 class="text-lg font-bold text-foreground">Settings</h2>
+              <p class="text-xs text-muted">Configure your AI provider and preferences</p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Settings Content -->
+        <div class="flex-1 overflow-auto p-4">
+          <form id="settings-form" class="space-y-6">
+            <!-- AI Configuration Card -->
+            <div class="card p-4 rounded-lg border border-border bg-card">
+              <div class="mb-4">
+                <h3 class="text-md font-semibold text-primary mb-1">AI Configuration</h3>
+                <p class="text-xs text-muted">Set up your AI provider and model</p>
+              </div>
+              
+              <div class="space-y-4">
+                <!-- AI Provider -->
+                <div>
+                  <label class="block text-sm font-medium mb-2 text-foreground">AI Provider</label>
+                  <div class="relative">
+                    <select id="ai-provider" class="input-primary w-full px-3 py-2.5 pr-8 rounded-lg text-sm appearance-none" title="Select AI provider">
+                      <option value="Gemini">Gemini</option>
+                      <option value="OpenAI">OpenAI</option>
+                      <option value="Groq">Groq</option>
+                      <option value="Cerebras">Cerebras</option>
+                      <option value="Mistral">Mistral</option>
+                      <option value="OpenRouter">OpenRouter</option>
+                      <option value="OpenAI-Compatible Endpoint">Custom Endpoint</option>
+                    </select>
+                    <svg class="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                  </div>
+                </div>
+
+                <!-- API Base URL (Hidden by default) -->
+                <div id="api-base-url-section" class="hidden">
+                  <label class="block text-sm font-medium mb-2 text-foreground">API Base URL</label>
+                  <input 
+                    id="api-base-url" 
+                    type="text" 
+                    placeholder="https://api.example.com/v1" 
+                    class="input-primary w-full px-3 py-2.5 rounded-lg text-sm"
+                  >
+                </div>
+
+                <!-- API Key -->
+                <div>
+                  <label class="block text-sm font-medium mb-2 text-foreground">API Key</label>
+                  <div class="relative">
+                    <input 
+                      id="api-key" 
+                      type="password" 
+                      placeholder="Enter your API key..." 
+                      class="input-primary w-full px-3 py-2.5 pr-10 rounded-lg text-sm"
+                    >
+                    <button type="button" id="toggle-api-key" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted hover:text-foreground transition-colors" title="Toggle API key visibility">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Model Selection -->
+                <div>
+                  <label class="block text-sm font-medium mb-2 text-foreground">Model</label>
+                  <div class="flex gap-2">
+                    <div class="relative flex-1">
+                      <select id="model-select" class="input-primary w-full px-3 py-2.5 pr-8 rounded-lg text-sm appearance-none" disabled title="Select AI model">
+                        <option value="">Select a model</option>
+                      </select>
+                      <svg class="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                      </svg>
+                    </div>
+                    <button type="button" id="refresh-models" class="btn-secondary px-3 py-2.5 rounded-lg flex-shrink-0" disabled title="Refresh models list">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Save Button -->
+            <button type="submit" class="btn-primary w-full py-3 rounded-lg font-semibold text-sm shadow-lg hover:shadow-xl transition-shadow">
+              Save Settings
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- AI Result View -->
+      <div id="ai-result-view" class="h-full flex-col hidden">
+        <div class="p-8 border-b glass">
+          <div class="flex items-center gap-4">
+            <button id="back-to-transcript" class="btn-ghost p-3 rounded-xl" title="Back to transcript">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+              </svg>
+            </button>
+            <div>
+              <h2 class="text-2xl font-bold">AI Analysis</h2>
+              <p class="text-sm text-foreground-secondary">AI-powered insights from the video transcript</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="flex-1 overflow-auto p-8">
+          <div class="card p-8">
+            <div id="ai-response" class="prose prose-sm max-w-none whitespace-pre-wrap text-foreground">
+              <!-- AI response will be inserted here -->
+            </div>
+            <div id="ai-loading" class="flex flex-col items-center justify-center h-48 hidden">
+              <svg class="animate-spin h-12 w-12 text-primary mb-6" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 0 1 4 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <p class="text-lg text-foreground-secondary font-medium">Analyzing transcript...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="youtube-transcript.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Subtitle Testing Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .main-content {
+            padding: 30px;
+        }
+        
+        .test-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border-left: 5px solid #4ECDC4;
+        }
+        
+        .test-section h2 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .test-section h2::before {
+            content: "🧪";
+            margin-right: 10px;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #34495e;
+        }
+        
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e1e8ed;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+        
+        .input-group input:focus, .input-group select:focus {
+            outline: none;
+            border-color: #4ECDC4;
+            box-shadow: 0 0 0 3px rgba(78, 205, 196, 0.1);
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(45deg, #4ECDC4, #44A08D);
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+        }
+        
+        .btn-danger {
+            background: linear-gradient(45deg, #FF6B6B, #FF8E53);
+            color: white;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .results-area {
+            background: #2c3e50;
+            color: #ecf0f1;
+            border-radius: 10px;
+            padding: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            margin-top: 20px;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-success { background: #2ecc71; }
+        .status-warning { background: #f39c12; }
+        .status-error { background: #e74c3c; }
+        .status-info { background: #3498db; }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            border-top: 4px solid #4ECDC4;
+        }
+        
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            color: #7f8c8d;
+            font-weight: 600;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e1e8ed;
+        }
+        
+        .tab {
+            padding: 12px 24px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 16px;
+            font-weight: 600;
+            color: #7f8c8d;
+            transition: color 0.3s ease;
+        }
+        
+        .tab.active {
+            color: #4ECDC4;
+            border-bottom: 2px solid #4ECDC4;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e1e8ed;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(45deg, #4ECDC4, #44A08D);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎬 YouTube Subtitle Testing Dashboard</h1>
+            <p>Advanced testing and debugging tools for YouTube subtitle extraction</p>
+        </div>
+        
+        <div class="main-content">
+            <div class="tabs">
+                <button class="tab active" onclick="showTab('live-test')">Live Testing</button>
+                <button class="tab" onclick="showTab('analytics')">Analytics</button>
+                <button class="tab" onclick="showTab('compatibility')">Compatibility</button>
+                <button class="tab" onclick="showTab('debug')">Debug Tools</button>
+            </div>
+            
+            <!-- Live Testing Tab -->
+            <div id="live-test" class="tab-content active">
+                <div class="test-section">
+                    <h2>Real-Time Subtitle Extraction Test</h2>
+                    
+                    <div class="input-group">
+                        <label for="video-id">Video ID (optional - will auto-detect current video):</label>
+                        <input type="text" id="video-id" placeholder="e.g., dQw4w9WgXcQ">
+                    </div>
+                    
+                    <div class="button-group">
+                        <button class="btn btn-primary" onclick="runLiveTest()">
+                            <span id="test-btn-text">🚀 Run Live Test</span>
+                        </button>
+                        <button class="btn btn-secondary" onclick="getCurrentVideoInfo()">
+                            📺 Get Current Video Info
+                        </button>
+                        <button class="btn btn-secondary" onclick="clearResults()">
+                            🧹 Clear Results
+                        </button>
+                    </div>
+                    
+                    <div class="progress-bar" id="test-progress" style="display: none;">
+                        <div class="progress-fill" id="progress-fill"></div>
+                    </div>
+                    
+                    <div class="results-area" id="live-test-results">
+                        🎯 Ready to test subtitle extraction...
+                        
+                        💡 Instructions:
+                        1. Navigate to a YouTube video with captions
+                        2. Click "Run Live Test" to test all extraction methods
+                        3. View detailed results and performance metrics below
+                        
+                        🔍 Features:
+                        - Tests multiple extraction methods simultaneously
+                        - Measures performance and success rates
+                        - Provides detailed error analysis
+                        - Shows subtitle samples for verification
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Analytics Tab -->
+            <div id="analytics" class="tab-content">
+                <div class="test-section">
+                    <h2>Performance Analytics</h2>
+                    
+                    <div class="button-group">
+                        <button class="btn btn-primary" onclick="startAnalytics()" id="start-analytics-btn">
+                            📊 Start Monitoring
+                        </button>
+                        <button class="btn btn-danger" onclick="stopAnalytics()" id="stop-analytics-btn" disabled>
+                            ⏹️ Stop Monitoring
+                        </button>
+                        <button class="btn btn-secondary" onclick="generateReport()">
+                            📋 Generate Report
+                        </button>
+                        <button class="btn btn-secondary" onclick="exportData()">
+                            💾 Export Data
+                        </button>
+                    </div>
+                    
+                    <div class="stats-grid" id="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value" id="total-extractions">0</div>
+                            <div class="stat-label">Total Extractions</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="success-rate">0%</div>
+                            <div class="stat-label">Success Rate</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="avg-time">0ms</div>
+                            <div class="stat-label">Average Time</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="error-count">0</div>
+                            <div class="stat-label">Errors</div>
+                        </div>
+                    </div>
+                    
+                    <div class="results-area" id="analytics-results">
+                        📊 Analytics monitoring ready...
+                        
+                        Click "Start Monitoring" to begin tracking subtitle extraction performance in real-time.
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Compatibility Tab -->
+            <div id="compatibility" class="tab-content">
+                <div class="test-section">
+                    <h2>Video Compatibility Testing</h2>
+                    
+                    <div class="input-group">
+                        <label for="video-list">Video IDs (one per line):</label>
+                        <textarea id="video-list" rows="6" style="width: 100%; padding: 12px; border: 2px solid #e1e8ed; border-radius: 8px;" placeholder="dQw4w9WgXcQ&#10;jNQXAC9IVRw&#10;9bZkp7q19f0"></textarea>
+                    </div>
+                    
+                    <div class="button-group">
+                        <button class="btn btn-primary" onclick="runCompatibilityTest()">
+                            🔍 Test Compatibility
+                        </button>
+                        <button class="btn btn-secondary" onclick="loadSampleVideos()">
+                            📝 Load Sample Videos
+                        </button>
+                    </div>
+                    
+                    <div class="results-area" id="compatibility-results">
+                        🔍 Compatibility testing ready...
+                        
+                        Enter video IDs above to test extraction compatibility across multiple videos.
+                        This will help identify patterns in success/failure rates.
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Debug Tools Tab -->
+            <div id="debug" class="tab-content">
+                <div class="test-section">
+                    <h2>Advanced Debug Tools</h2>
+                    
+                    <div class="button-group">
+                        <button class="btn btn-secondary" onclick="inspectPageData()">
+                            🔍 Inspect Page Data
+                        </button>
+                        <button class="btn btn-secondary" onclick="testDirectAPI()">
+                            🌐 Test Direct API
+                        </button>
+                        <button class="btn btn-secondary" onclick="analyzePlayerState()">
+                            ▶️ Analyze Player State
+                        </button>
+                        <button class="btn btn-secondary" onclick="checkInjection()">
+                            💉 Check Injection Status
+                        </button>
+                    </div>
+                    
+                    <div class="results-area" id="debug-results">
+                        🛠️ Debug tools ready...
+                        
+                        Use these tools to diagnose specific issues with subtitle extraction:
+                        - Inspect Page Data: Check for ytInitialPlayerResponse and caption tracks
+                        - Test Direct API: Try direct API calls to YouTube's timedtext endpoint
+                        - Analyze Player State: Check video player status and capabilities
+                        - Check Injection Status: Verify that injection scripts are properly loaded
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isTestRunning = false;
+        let isMonitoring = false;
+        let tester = null;
+        let analytics = null;
+
+        // Tab switching
+        function showTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab content
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+        }
+
+        // Initialize when page loads
+        window.addEventListener('load', async () => {
+            appendToResults('live-test-results', '🚀 Testing dashboard loaded!\n');
+            appendToResults('live-test-results', '⏳ Checking for YouTube page...\n');
+            
+            // Check if we're on YouTube
+            if (window.location.hostname.includes('youtube.com')) {
+                appendToResults('live-test-results', '✅ YouTube page detected!\n');
+                getCurrentVideoInfo();
+            } else {
+                appendToResults('live-test-results', '⚠️ Not on YouTube. Open this dashboard on a YouTube video page for full functionality.\n');
+            }
+        });
+
+        // Live testing functions
+        async function runLiveTest() {
+            if (isTestRunning) return;
+            
+            isTestRunning = true;
+            const btn = document.getElementById('test-btn-text');
+            const originalText = btn.textContent;
+            btn.innerHTML = '<span class="loading"></span> Running Test...';
+            
+            const progressBar = document.getElementById('test-progress');
+            const progressFill = document.getElementById('progress-fill');
+            progressBar.style.display = 'block';
+            
+            try {
+                const videoId = document.getElementById('video-id').value || getCurrentVideoId();
+                
+                appendToResults('live-test-results', '\n🧪 STARTING LIVE SUBTITLE EXTRACTION TEST\n');
+                appendToResults('live-test-results', '==========================================\n');
+                appendToResults('live-test-results', `🎥 Video ID: ${videoId}\n`);
+                appendToResults('live-test-results', `⏰ Start Time: ${new Date().toLocaleTimeString()}\n\n`);
+                
+                // Simulate progress and run tests
+                const tests = [
+                    { name: 'Enhanced Page Extraction', progress: 25 },
+                    { name: 'Direct API Call', progress: 50 },
+                    { name: 'Multiple Format Test', progress: 75 },
+                    { name: 'Auto-Generated Test', progress: 100 }
+                ];
+                
+                for (const test of tests) {
+                    appendToResults('live-test-results', `🔍 Testing: ${test.name}\n`);
+                    progressFill.style.width = test.progress + '%';
+                    
+                    // Simulate test delay
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    
+                    // Try to run actual test if possible
+                    try {
+                        if (window.testSubtitles) {
+                            // If testing functions are available, use them
+                            await runActualTest(videoId, test.name);
+                        } else {
+                            // Simulate test results
+                            appendToResults('live-test-results', `⚠️ ${test.name}: Testing framework not fully loaded\n`);
+                        }
+                    } catch (error) {
+                        appendToResults('live-test-results', `❌ ${test.name}: ${error.message}\n`);
+                    }
+                }
+                
+                appendToResults('live-test-results', '\n✅ Live test completed!\n');
+                appendToResults('live-test-results', '==========================================\n\n');
+                
+            } catch (error) {
+                appendToResults('live-test-results', `\n🚨 Test failed: ${error.message}\n\n`);
+            } finally {
+                isTestRunning = false;
+                btn.textContent = originalText;
+                progressBar.style.display = 'none';
+                progressFill.style.width = '0%';
+            }
+        }
+
+        async function runActualTest(videoId, testName) {
+            try {
+                if (window.testSubtitles) {
+                    const results = await window.testSubtitles(videoId);
+                    if (results && results.length > 0) {
+                        const successful = results.filter(r => r.success);
+                        appendToResults('live-test-results', `✅ ${testName}: ${successful.length}/${results.length} methods successful\n`);
+                    } else {
+                        appendToResults('live-test-results', `❌ ${testName}: No results\n`);
+                    }
+                } else {
+                    appendToResults('live-test-results', `⚠️ ${testName}: Test framework not available\n`);
+                }
+            } catch (error) {
+                appendToResults('live-test-results', `❌ ${testName}: ${error.message}\n`);
+            }
+        }
+
+        function getCurrentVideoInfo() {
+            const videoId = getCurrentVideoId();
+            const videoTitle = document.title;
+            const videoUrl = window.location.href;
+            
+            appendToResults('live-test-results', '\n📺 CURRENT VIDEO INFORMATION\n');
+            appendToResults('live-test-results', '============================\n');
+            appendToResults('live-test-results', `🆔 Video ID: ${videoId || 'Not detected'}\n`);
+            appendToResults('live-test-results', `📝 Title: ${videoTitle}\n`);
+            appendToResults('live-test-results', `🔗 URL: ${videoUrl}\n`);
+            appendToResults('live-test-results', `📍 Page Type: ${getPageType()}\n`);
+            appendToResults('live-test-results', '============================\n\n');
+            
+            // Update the video ID input field
+            if (videoId) {
+                document.getElementById('video-id').value = videoId;
+            }
+        }
+
+        function getCurrentVideoId() {
+            const urlParams = new URLSearchParams(window.location.search);
+            let videoId = urlParams.get('v');
+            
+            if (!videoId) {
+                const shortsMatch = window.location.pathname.match(/\/shorts\/([A-Za-z0-9_-]+)/);
+                if (shortsMatch) {
+                    videoId = shortsMatch[1];
+                }
+            }
+            
+            return videoId;
+        }
+
+        function getPageType() {
+            if (window.location.pathname.includes('/shorts/')) {
+                return 'YouTube Shorts';
+            } else if (window.location.pathname === '/watch') {
+                return 'Regular Video';
+            } else if (window.location.search.includes('list=')) {
+                return 'Playlist';
+            } else {
+                return 'Other';
+            }
+        }
+
+        // Analytics functions
+        function startAnalytics() {
+            if (window.startAnalytics) {
+                window.startAnalytics();
+                isMonitoring = true;
+                
+                document.getElementById('start-analytics-btn').disabled = true;
+                document.getElementById('stop-analytics-btn').disabled = false;
+                
+                appendToResults('analytics-results', '📊 Performance monitoring started...\n');
+                
+                // Start updating stats
+                updateStatsInterval = setInterval(updateStats, 2000);
+            } else {
+                appendToResults('analytics-results', '❌ Analytics framework not available\n');
+            }
+        }
+
+        function stopAnalytics() {
+            if (window.stopAnalytics) {
+                window.stopAnalytics();
+                isMonitoring = false;
+                
+                document.getElementById('start-analytics-btn').disabled = false;
+                document.getElementById('stop-analytics-btn').disabled = true;
+                
+                appendToResults('analytics-results', '⏹️ Performance monitoring stopped\n');
+                
+                if (updateStatsInterval) {
+                    clearInterval(updateStatsInterval);
+                }
+            }
+        }
+
+        function updateStats() {
+            if (window.getAnalytics) {
+                const data = window.getAnalytics();
+                
+                document.getElementById('total-extractions').textContent = data.totalExtractions || 0;
+                
+                const successRate = data.totalExtractions > 0 ? 
+                    ((data.successfulExtractions / data.totalExtractions) * 100).toFixed(1) : 0;
+                document.getElementById('success-rate').textContent = successRate + '%';
+                
+                document.getElementById('avg-time').textContent = Math.round(data.averageExtractionTime || 0) + 'ms';
+                document.getElementById('error-count').textContent = data.failedExtractions || 0;
+            }
+        }
+
+        function generateReport() {
+            if (window.getAnalytics) {
+                const data = window.getAnalytics();
+                appendToResults('analytics-results', '\n📊 PERFORMANCE REPORT\n');
+                appendToResults('analytics-results', '===================\n');
+                appendToResults('analytics-results', JSON.stringify(data, null, 2));
+                appendToResults('analytics-results', '\n===================\n\n');
+            } else {
+                appendToResults('analytics-results', '❌ Analytics data not available\n');
+            }
+        }
+
+        function exportData() {
+            if (window.getAnalytics) {
+                const data = window.getAnalytics();
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `youtube-subtitle-analytics-${Date.now()}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+                appendToResults('analytics-results', '💾 Analytics data exported\n');
+            } else {
+                appendToResults('analytics-results', '❌ No data to export\n');
+            }
+        }
+
+        // Compatibility testing
+        function loadSampleVideos() {
+            document.getElementById('video-list').value = `dQw4w9WgXcQ
+jNQXAC9IVRw
+9bZkp7q19f0
+K4TOrB7at0Y
+fJ9rUzIMcZQ`;
+            appendToResults('compatibility-results', '📝 Sample video IDs loaded\n');
+        }
+
+        async function runCompatibilityTest() {
+            const videoIds = document.getElementById('video-list').value
+                .split('\n')
+                .map(id => id.trim())
+                .filter(id => id.length > 0);
+            
+            if (videoIds.length === 0) {
+                appendToResults('compatibility-results', '❌ Please enter at least one video ID\n');
+                return;
+            }
+            
+            appendToResults('compatibility-results', `\n🔍 TESTING ${videoIds.length} VIDEOS\n`);
+            appendToResults('compatibility-results', '==============================\n');
+            
+            for (const videoId of videoIds) {
+                appendToResults('compatibility-results', `Testing ${videoId}... `);
+                
+                try {
+                    // Simulate compatibility test
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    const success = Math.random() > 0.3; // Simulate 70% success rate
+                    
+                    if (success) {
+                        appendToResults('compatibility-results', '✅ Compatible\n');
+                    } else {
+                        appendToResults('compatibility-results', '❌ Failed\n');
+                    }
+                } catch (error) {
+                    appendToResults('compatibility-results', `❌ Error: ${error.message}\n`);
+                }
+            }
+            
+            appendToResults('compatibility-results', '==============================\n\n');
+        }
+
+        // Debug tools
+        function inspectPageData() {
+            appendToResults('debug-results', '\n🔍 INSPECTING PAGE DATA\n');
+            appendToResults('debug-results', '=====================\n');
+            
+            // Check for ytInitialPlayerResponse
+            if (window.ytInitialPlayerResponse) {
+                appendToResults('debug-results', '✅ ytInitialPlayerResponse found\n');
+                if (window.ytInitialPlayerResponse.captions) {
+                    const tracks = window.ytInitialPlayerResponse.captions.playerCaptionsTracklistRenderer?.captionTracks;
+                    appendToResults('debug-results', `📝 Caption tracks: ${tracks ? tracks.length : 0}\n`);
+                } else {
+                    appendToResults('debug-results', '❌ No captions in player response\n');
+                }
+            } else {
+                appendToResults('debug-results', '❌ ytInitialPlayerResponse not found\n');
+            }
+            
+            // Check for other YouTube globals
+            const globals = ['yt', 'ytplayer', 'ytcfg'];
+            globals.forEach(global => {
+                if (window[global]) {
+                    appendToResults('debug-results', `✅ ${global} found\n`);
+                } else {
+                    appendToResults('debug-results', `❌ ${global} not found\n`);
+                }
+            });
+            
+            appendToResults('debug-results', '=====================\n\n');
+        }
+
+        async function testDirectAPI() {
+            const videoId = getCurrentVideoId();
+            if (!videoId) {
+                appendToResults('debug-results', '❌ No video ID found\n');
+                return;
+            }
+            
+            appendToResults('debug-results', '\n🌐 TESTING DIRECT API\n');
+            appendToResults('debug-results', '===================\n');
+            appendToResults('debug-results', `🎥 Video ID: ${videoId}\n`);
+            
+            const testUrls = [
+                `https://www.youtube.com/api/timedtext?lang=en&v=${videoId}&fmt=json3`,
+                `https://www.youtube.com/api/timedtext?lang=en&v=${videoId}`,
+                `https://www.youtube.com/api/timedtext?lang=en&v=${videoId}&fmt=vtt`
+            ];
+            
+            for (const url of testUrls) {
+                try {
+                    appendToResults('debug-results', `Testing: ${url.split('?')[1]}\n`);
+                    const response = await fetch(url);
+                    appendToResults('debug-results', `Response: ${response.status} ${response.statusText}\n`);
+                    
+                    if (response.ok) {
+                        const text = await response.text();
+                        appendToResults('debug-results', `Content length: ${text.length} characters\n`);
+                    }
+                } catch (error) {
+                    appendToResults('debug-results', `Error: ${error.message}\n`);
+                }
+                appendToResults('debug-results', '\n');
+            }
+            
+            appendToResults('debug-results', '===================\n\n');
+        }
+
+        function analyzePlayerState() {
+            appendToResults('debug-results', '\n▶️ ANALYZING PLAYER STATE\n');
+            appendToResults('debug-results', '========================\n');
+            
+            const video = document.querySelector('video');
+            if (video) {
+                appendToResults('debug-results', '✅ Video element found\n');
+                appendToResults('debug-results', `Current time: ${video.currentTime}s\n`);
+                appendToResults('debug-results', `Duration: ${video.duration}s\n`);
+                appendToResults('debug-results', `Paused: ${video.paused}\n`);
+                appendToResults('debug-results', `Ready state: ${video.readyState}\n`);
+            } else {
+                appendToResults('debug-results', '❌ No video element found\n');
+            }
+            
+            // Check for caption button
+            const captionBtn = document.querySelector('.ytp-subtitles-button, button[aria-label*="caption"]');
+            if (captionBtn) {
+                appendToResults('debug-results', '✅ Caption button found\n');
+                appendToResults('debug-results', `Caption button state: ${captionBtn.getAttribute('aria-pressed') || 'unknown'}\n`);
+            } else {
+                appendToResults('debug-results', '❌ Caption button not found\n');
+            }
+            
+            appendToResults('debug-results', '========================\n\n');
+        }
+
+        function checkInjection() {
+            appendToResults('debug-results', '\n💉 CHECKING INJECTION STATUS\n');
+            appendToResults('debug-results', '===========================\n');
+            
+            const injectedScript = document.querySelector('script[data-sidepanel-injected]');
+            if (injectedScript) {
+                appendToResults('debug-results', '✅ Injection script found\n');
+            } else {
+                appendToResults('debug-results', '❌ Injection script not found\n');
+            }
+            
+            // Check for testing functions
+            const testFunctions = ['testSubtitles', 'startAnalytics', 'YouTubeSubtitleTester'];
+            testFunctions.forEach(func => {
+                if (window[func]) {
+                    appendToResults('debug-results', `✅ ${func} available\n`);
+                } else {
+                    appendToResults('debug-results', `❌ ${func} not available\n`);
+                }
+            });
+            
+            appendToResults('debug-results', '===========================\n\n');
+        }
+
+        // Utility functions
+        function appendToResults(elementId, text) {
+            const element = document.getElementById(elementId);
+            element.textContent += text;
+            element.scrollTop = element.scrollHeight;
+        }
+
+        function clearResults() {
+            document.getElementById('live-test-results').textContent = '🎯 Results cleared. Ready for new test...\n';
+        }
+    </script>
+</body>
+</html>

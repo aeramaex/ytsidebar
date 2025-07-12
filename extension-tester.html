@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Transcript Extension Tester</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        
+        .test-section {
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        
+        .test-section h3 {
+            margin-top: 0;
+            color: #555;
+        }
+        
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        
+        button:hover {
+            background: #45a049;
+        }
+        
+        button:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .danger {
+            background: #f44336;
+        }
+        
+        .danger:hover {
+            background: #da190b;
+        }
+        
+        #debug-output {
+            background: #1e1e1e;
+            color: #f0f0f0;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            margin-top: 10px;
+        }
+        
+        .url-input {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .results {
+            background: #f9f9f9;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .status.warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .instructions {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛠️ YouTube Transcript Extension Tester</h1>
+        
+        <div class="instructions">
+            <h3>📋 Instructions</h3>
+            <ol>
+                <li>Load your extension in Chrome</li>
+                <li>Navigate to a YouTube video with subtitles</li>
+                <li>Open the extension's side panel</li>
+                <li>Use the buttons below to test functionality</li>
+                <li>Check the debug output for detailed logs</li>
+            </ol>
+        </div>
+        
+        <div class="test-section">
+            <h3>🔍 Extension Environment Check</h3>
+            <p>First, verify that your extension is loaded and working:</p>
+            <button onclick="checkExtensionEnvironment()">Check Extension Environment</button>
+            <button onclick="testExtensionInjection()">Test Script Injection</button>
+            <button onclick="checkYouTubeIntegration()">Check YouTube Integration</button>
+            <div id="environment-results" class="results"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>🎬 Transcript Extraction Test</h3>
+            <input type="text" id="test-video-url" class="url-input" placeholder="Enter YouTube video URL (e.g., https://www.youtube.com/watch?v=dQw4w9WgXcQ)">
+            <br>
+            <button onclick="testTranscriptExtraction()">Test Transcript Extraction</button>
+            <button onclick="testDirectExtraction()">Test Direct Method</button>
+            <button onclick="testFixedExtractor()">Test Fixed Extractor</button>
+            <div id="transcript-results" class="results"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>🔧 Extension Communication Test</h3>
+            <p>Test the communication between content script, background script, and side panel:</p>
+            <button onclick="testBackgroundConnection()">Test Background Connection</button>
+            <button onclick="testContentScriptConnection()">Test Content Script</button>
+            <button onclick="testSidePanelConnection()">Test Side Panel</button>
+            <div id="communication-results" class="results"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>🚨 Quick Fixes</h3>
+            <p>Try these quick fixes if the extension isn't working:</p>
+            <button onclick="reloadExtension()" class="danger">Reload Extension</button>
+            <button onclick="clearCache()">Clear Cache</button>
+            <button onclick="resetExtension()">Reset Extension State</button>
+            <div id="fixes-results" class="results"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>📊 Debug Output</h3>
+            <button onclick="clearDebugOutput()">Clear Output</button>
+            <button onclick="saveDebugLog()">Save Debug Log</button>
+            <div id="debug-output"></div>
+        </div>
+    </div>
+
+    <script>
+        // Debug logging
+        function logToDebug(message, type = 'info') {
+            const output = document.getElementById('debug-output');
+            const timestamp = new Date().toLocaleTimeString();
+            const prefix = type === 'error' ? '❌' : type === 'warning' ? '⚠️' : type === 'success' ? '✅' : 'ℹ️';
+            output.textContent += `[${timestamp}] ${prefix} ${message}\n`;
+            output.scrollTop = output.scrollHeight;
+        }
+        
+        function showStatus(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+        
+        // Extension environment check
+        async function checkExtensionEnvironment() {
+            logToDebug('Checking extension environment...');
+            showStatus('environment-results', 'Checking extension environment...', 'warning');
+            
+            let results = '<h4>Extension Environment Check:</h4>';
+            
+            try {
+                // Check if chrome.runtime is available
+                if (typeof chrome !== 'undefined' && chrome.runtime) {
+                    results += '<p>✅ Chrome extension APIs available</p>';
+                    results += `<p>Extension ID: ${chrome.runtime.id}</p>`;
+                } else {
+                    results += '<p>❌ Chrome extension APIs not available</p>';
+                }
+                
+                // Check if we're on a YouTube page
+                const isYouTube = window.location.hostname.includes('youtube.com');
+                results += `<p>${isYouTube ? '✅' : '❌'} On YouTube page: ${window.location.hostname}</p>`;
+                
+                // Check for YouTube objects
+                results += `<p>${window.ytInitialPlayerResponse ? '✅' : '❌'} window.ytInitialPlayerResponse available</p>`;
+                results += `<p>${window.ytplayer ? '✅' : '❌'} window.ytplayer available</p>`;
+                
+                // Check for our scripts
+                const injectedScripts = document.querySelectorAll('script[data-sidepanel-injected]');
+                results += `<p>${injectedScripts.length > 0 ? '✅' : '❌'} Injected scripts found: ${injectedScripts.length}</p>`;
+                
+                // Check for our extractors
+                results += `<p>${window.debugExtractor ? '✅' : '❌'} Debug extractor available</p>`;
+                results += `<p>${window.fixedTranscriptExtractor ? '✅' : '❌'} Fixed extractor available</p>`;
+                results += `<p>${window.YouTubeTranscript ? '✅' : '❌'} YouTube transcript module available</p>`;
+                
+                document.getElementById('environment-results').innerHTML = results;
+                showStatus('environment-results', 'Environment check completed!', 'success');
+                logToDebug('Extension environment check completed');
+                
+            } catch (error) {
+                results += `<p>❌ Error during check: ${error.message}</p>`;
+                document.getElementById('environment-results').innerHTML = results;
+                showStatus('environment-results', `Environment check failed: ${error.message}`, 'error');
+                logToDebug(`Environment check failed: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testExtensionInjection() {
+            logToDebug('Testing extension script injection...');
+            
+            try {
+                // Try to run diagnostics if available
+                let results = '<h4>Script Injection Test:</h4>';
+                
+                if (window.debugExtractor) {
+                    const diagnostic = await window.debugExtractor.diagnose();
+                    results += '<p>✅ Debug extractor diagnostic successful</p>';
+                    results += `<pre>${JSON.stringify(diagnostic, null, 2)}</pre>`;
+                }
+                
+                if (window.fixedTranscriptExtractor) {
+                    const diagnostic = await window.fixedTranscriptExtractor.diagnose();
+                    results += '<p>✅ Fixed extractor diagnostic successful</p>';
+                    results += `<pre>${JSON.stringify(diagnostic, null, 2)}</pre>`;
+                }
+                
+                if (!window.debugExtractor && !window.fixedTranscriptExtractor) {
+                    results += '<p>❌ No transcript extractors found</p>';
+                    results += '<p>💡 Try reloading the page or checking if you\'re on a YouTube video</p>';
+                }
+                
+                document.getElementById('environment-results').innerHTML = results;
+                logToDebug('Script injection test completed');
+                
+            } catch (error) {
+                showStatus('environment-results', `Script injection test failed: ${error.message}`, 'error');
+                logToDebug(`Script injection test failed: ${error.message}`, 'error');
+            }
+        }
+        
+        async function checkYouTubeIntegration() {
+            logToDebug('Checking YouTube integration...');
+            
+            let results = '<h4>YouTube Integration Check:</h4>';
+            
+            // Check if we're on YouTube
+            const isYouTube = window.location.hostname.includes('youtube.com');
+            results += `<p>${isYouTube ? '✅' : '❌'} On YouTube: ${isYouTube}</p>`;
+            
+            if (isYouTube) {
+                // Check video ID
+                const videoId = extractVideoId(window.location.href);
+                results += `<p>${videoId ? '✅' : '❌'} Video ID found: ${videoId || 'None'}</p>`;
+                
+                // Check for captions
+                if (window.ytInitialPlayerResponse && window.ytInitialPlayerResponse.captions) {
+                    const tracks = window.ytInitialPlayerResponse.captions?.playerCaptionsTracklistRenderer?.captionTracks;
+                    results += `<p>✅ Caption tracks available: ${tracks?.length || 0}</p>`;
+                    
+                    if (tracks && tracks.length > 0) {
+                        results += '<p>Available languages:</p><ul>';
+                        tracks.forEach(track => {
+                            results += `<li>${track.languageCode} - ${track.name?.simpleText || 'Unknown'}</li>`;
+                        });
+                        results += '</ul>';
+                    }
+                } else {
+                    results += '<p>❌ No caption tracks found</p>';
+                }
+            } else {
+                results += '<p>⚠️ Not on YouTube - navigate to a YouTube video to test</p>';
+            }
+            
+            document.getElementById('environment-results').innerHTML = results;
+            logToDebug('YouTube integration check completed');
+        }
+        
+        function extractVideoId(url) {
+            const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\\s]{11})/;
+            const match = url.match(regex);
+            return match ? match[1] : null;
+        }
+        
+        async function testTranscriptExtraction() {
+            const videoUrl = document.getElementById('test-video-url').value.trim();
+            
+            if (!videoUrl && !window.location.href.includes('youtube.com/watch')) {
+                showStatus('transcript-results', 'Please enter a YouTube video URL or navigate to a YouTube video', 'warning');
+                return;
+            }
+            
+            const testUrl = videoUrl || window.location.href;
+            logToDebug(`Testing transcript extraction for: ${testUrl}`);
+            showStatus('transcript-results', 'Testing transcript extraction...', 'warning');
+            
+            let results = '<h4>Transcript Extraction Test Results:</h4>';
+            
+            try {
+                // Test 1: Fixed extractor
+                if (window.fixedTranscriptExtractor) {
+                    logToDebug('Testing fixed extractor...');
+                    try {
+                        const videoId = extractVideoId(testUrl);
+                        const transcript = await window.fixedTranscriptExtractor.getTranscript(videoId);
+                        results += `<p>✅ Fixed extractor: ${transcript.length} segments</p>`;
+                        logToDebug(`Fixed extractor success: ${transcript.length} segments`);
+                    } catch (error) {
+                        results += `<p>❌ Fixed extractor failed: ${error.message}</p>`;
+                        logToDebug(`Fixed extractor failed: ${error.message}`, 'error');
+                    }
+                }
+                
+                // Test 2: Debug extractor
+                if (window.debugExtractor) {
+                    logToDebug('Testing debug extractor...');
+                    try {
+                        const videoId = extractVideoId(testUrl);
+                        const transcript = await window.debugExtractor.getTranscript(videoId);
+                        results += `<p>✅ Debug extractor: ${transcript.length} segments</p>`;
+                        logToDebug(`Debug extractor success: ${transcript.length} segments`);
+                    } catch (error) {
+                        results += `<p>❌ Debug extractor failed: ${error.message}</p>`;
+                        logToDebug(`Debug extractor failed: ${error.message}`, 'error');
+                    }
+                }
+                
+                // Test 3: YouTube transcript module
+                if (window.YouTubeTranscript) {
+                    logToDebug('Testing YouTube transcript module...');
+                    try {
+                        const transcript = await window.YouTubeTranscript.fetchTranscript(testUrl);
+                        results += `<p>✅ YouTube transcript module: ${transcript.length} segments</p>`;
+                        logToDebug(`YouTube transcript module success: ${transcript.length} segments`);
+                    } catch (error) {
+                        results += `<p>❌ YouTube transcript module failed: ${error.message}</p>`;
+                        logToDebug(`YouTube transcript module failed: ${error.message}`, 'error');
+                    }
+                }
+                
+                if (!window.fixedTranscriptExtractor && !window.debugExtractor && !window.YouTubeTranscript) {
+                    results += '<p>❌ No transcript extractors available</p>';
+                    results += '<p>💡 Make sure you\'re on a YouTube page and the extension is loaded</p>';
+                }
+                
+                document.getElementById('transcript-results').innerHTML = results;
+                showStatus('transcript-results', 'Transcript extraction test completed!', 'success');
+                
+            } catch (error) {
+                showStatus('transcript-results', `Transcript extraction test failed: ${error.message}`, 'error');
+                logToDebug(`Transcript extraction test failed: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testDirectExtraction() {
+            logToDebug('Testing direct transcript extraction...');
+            showStatus('transcript-results', 'Testing direct extraction...', 'warning');
+            
+            try {
+                let results = '<h4>Direct Extraction Test:</h4>';
+                
+                // Try to extract tracks directly from page
+                if (window.ytInitialPlayerResponse && window.ytInitialPlayerResponse.captions) {
+                    const tracks = window.ytInitialPlayerResponse.captions?.playerCaptionsTracklistRenderer?.captionTracks;
+                    
+                    if (tracks && tracks.length > 0) {
+                        results += `<p>✅ Found ${tracks.length} caption tracks</p>`;
+                        
+                        // Try to fetch the first track
+                        const firstTrack = tracks[0];
+                        logToDebug(`Fetching first track: ${firstTrack.languageCode}`);
+                        
+                        const response = await fetch(firstTrack.baseUrl);
+                        const xmlText = await response.text();
+                        
+                        results += `<p>✅ Downloaded XML data (${xmlText.length} characters)</p>`;
+                        results += `<p>First track preview:</p>`;
+                        results += `<pre>${xmlText.substring(0, 300)}...</pre>`;
+                        
+                        logToDebug(`Direct extraction successful: ${xmlText.length} characters`);
+                    } else {
+                        results += '<p>❌ No caption tracks found</p>';
+                    }
+                } else {
+                    results += '<p>❌ No YouTube player response found</p>';
+                }
+                
+                document.getElementById('transcript-results').innerHTML = results;
+                showStatus('transcript-results', 'Direct extraction test completed!', 'success');
+                
+            } catch (error) {
+                showStatus('transcript-results', `Direct extraction failed: ${error.message}`, 'error');
+                logToDebug(`Direct extraction failed: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testFixedExtractor() {
+            logToDebug('Testing the fixed extractor specifically...');
+            
+            if (!window.fixedTranscriptExtractor) {
+                showStatus('transcript-results', 'Fixed extractor not available', 'error');
+                return;
+            }
+            
+            try {
+                const diagnostic = await window.fixedTranscriptExtractor.diagnose();
+                logToDebug(`Fixed extractor diagnostic: ${JSON.stringify(diagnostic)}`);
+                
+                if (diagnostic.videoId) {
+                    const transcript = await window.fixedTranscriptExtractor.getTranscript();
+                    
+                    let results = '<h4>Fixed Extractor Test Results:</h4>';
+                    results += `<p>✅ Successfully extracted ${transcript.length} segments</p>`;
+                    results += '<p>Sample segments:</p><ul>';
+                    
+                    transcript.slice(0, 5).forEach(segment => {
+                        results += `<li>[${segment.start.toFixed(1)}s] ${segment.text}</li>`;
+                    });
+                    
+                    results += '</ul>';
+                    
+                    document.getElementById('transcript-results').innerHTML = results;
+                    showStatus('transcript-results', 'Fixed extractor test successful!', 'success');
+                    logToDebug(`Fixed extractor success: ${transcript.length} segments`);
+                    
+                } else {
+                    showStatus('transcript-results', 'No video ID found - make sure you\'re on a YouTube video', 'warning');
+                    logToDebug('No video ID found for fixed extractor test', 'warning');
+                }
+                
+            } catch (error) {
+                showStatus('transcript-results', `Fixed extractor test failed: ${error.message}`, 'error');
+                logToDebug(`Fixed extractor test failed: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testBackgroundConnection() {
+            logToDebug('Testing background script connection...');
+            
+            if (typeof chrome === 'undefined' || !chrome.runtime) {
+                showStatus('communication-results', 'Chrome extension APIs not available', 'error');
+                return;
+            }
+            
+            try {
+                // Test basic message to background script
+                const response = await chrome.runtime.sendMessage({type: 'HEALTH_CHECK'});
+                
+                let results = '<h4>Background Connection Test:</h4>';
+                results += '<p>✅ Background script responding</p>';
+                results += `<p>Response: ${JSON.stringify(response)}</p>`;
+                
+                document.getElementById('communication-results').innerHTML = results;
+                showStatus('communication-results', 'Background connection successful!', 'success');
+                logToDebug('Background connection test successful');
+                
+            } catch (error) {
+                showStatus('communication-results', `Background connection failed: ${error.message}`, 'error');
+                logToDebug(`Background connection failed: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testContentScriptConnection() {
+            logToDebug('Testing content script connection...');
+            
+            let results = '<h4>Content Script Test:</h4>';
+            
+            // Check if content script functions are available
+            const contentScriptIndicators = [
+                'script[data-sidepanel-injected]',
+                'window.debugExtractor',
+                'window.fixedTranscriptExtractor'
+            ];
+            
+            let found = 0;
+            contentScriptIndicators.forEach(indicator => {
+                if (indicator.startsWith('script')) {
+                    const elements = document.querySelectorAll(indicator);
+                    if (elements.length > 0) {
+                        results += `<p>✅ ${indicator}: ${elements.length} found</p>`;
+                        found++;
+                    } else {
+                        results += `<p>❌ ${indicator}: not found</p>`;
+                    }
+                } else if (indicator.startsWith('window.')) {
+                    const obj = window[indicator.replace('window.', '')];
+                    if (obj) {
+                        results += `<p>✅ ${indicator}: available</p>`;
+                        found++;
+                    } else {
+                        results += `<p>❌ ${indicator}: not available</p>`;
+                    }
+                }
+            });
+            
+            if (found > 0) {
+                results += `<p>✅ Content script appears to be working (${found}/${contentScriptIndicators.length} indicators found)</p>`;
+                showStatus('communication-results', 'Content script test completed!', 'success');
+            } else {
+                results += '<p>❌ Content script may not be loaded or working</p>';
+                showStatus('communication-results', 'Content script test failed!', 'error');
+            }
+            
+            document.getElementById('communication-results').innerHTML = results;
+            logToDebug('Content script test completed');
+        }
+        
+        async function testSidePanelConnection() {
+            logToDebug('Testing side panel connection...');
+            showStatus('communication-results', 'Side panel test: Open the extension side panel and check the console', 'warning');
+            
+            let results = '<h4>Side Panel Test:</h4>';
+            results += '<p>ℹ️ To test the side panel:</p>';
+            results += '<ol>';
+            results += '<li>Click the extension icon to open the side panel</li>';
+            results += '<li>Check the side panel console for any errors</li>';
+            results += '<li>Try to extract subtitles from the side panel</li>';
+            results += '<li>Monitor this debug output for messages</li>';
+            results += '</ol>';
+            
+            document.getElementById('communication-results').innerHTML = results;
+            logToDebug('Side panel test instructions provided');
+        }
+        
+        async function reloadExtension() {
+            logToDebug('Attempting to reload extension...');
+            
+            if (typeof chrome !== 'undefined' && chrome.runtime) {
+                try {
+                    chrome.runtime.reload();
+                    showStatus('fixes-results', 'Extension reload initiated', 'success');
+                    logToDebug('Extension reload initiated');
+                } catch (error) {
+                    showStatus('fixes-results', `Extension reload failed: ${error.message}`, 'error');
+                    logToDebug(`Extension reload failed: ${error.message}`, 'error');
+                }
+            } else {
+                showStatus('fixes-results', 'Extension reload not available', 'error');
+                logToDebug('Extension reload not available');
+            }
+        }
+        
+        async function clearCache() {
+            logToDebug('Clearing caches...');
+            
+            let results = '<h4>Cache Clear Results:</h4>';
+            
+            // Clear local storage
+            try {
+                localStorage.clear();
+                results += '<p>✅ Local storage cleared</p>';
+            } catch (error) {
+                results += `<p>❌ Local storage clear failed: ${error.message}</p>';
+            }
+            
+            // Clear session storage
+            try {
+                sessionStorage.clear();
+                results += '<p>✅ Session storage cleared</p>';
+            } catch (error) {
+                results += `<p>❌ Session storage clear failed: ${error.message}</p>';
+            }
+            
+            // Clear extractor caches if available
+            if (window.fixedTranscriptExtractor && window.fixedTranscriptExtractor.clearCache) {
+                window.fixedTranscriptExtractor.clearCache();
+                results += '<p>✅ Fixed extractor cache cleared</p>';
+            }
+            
+            if (window.debugExtractor && window.debugExtractor.cache) {
+                window.debugExtractor.cache.clear();
+                results += '<p>✅ Debug extractor cache cleared</p>';
+            }
+            
+            document.getElementById('fixes-results').innerHTML = results;
+            showStatus('fixes-results', 'Cache clearing completed!', 'success');
+            logToDebug('Cache clearing completed');
+        }
+        
+        async function resetExtension() {
+            logToDebug('Resetting extension state...');
+            
+            // Clear caches first
+            await clearCache();
+            
+            // Reload the page to restart everything
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+            
+            showStatus('fixes-results', 'Extension reset initiated - page will reload in 1 second', 'warning');
+            logToDebug('Extension reset initiated');
+        }
+        
+        function clearDebugOutput() {
+            document.getElementById('debug-output').textContent = '';
+            logToDebug('Debug output cleared');
+        }
+        
+        function saveDebugLog() {
+            const debugOutput = document.getElementById('debug-output').textContent;
+            const blob = new Blob([debugOutput], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `youtube-extension-debug-${new Date().toISOString().replace(/[:.]/g, '-')}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            logToDebug('Debug log saved');
+        }
+        
+        // Initialize
+        window.addEventListener('load', () => {
+            logToDebug('YouTube Extension Tester loaded');
+            logToDebug(`Current URL: ${window.location.href}`);
+            logToDebug(`User Agent: ${navigator.userAgent}`);
+            
+            // Auto-run environment check after a short delay
+            setTimeout(checkExtensionEnvironment, 1000);
+        });
+    </script>
+</body>
+</html>

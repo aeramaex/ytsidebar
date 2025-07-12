@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Extension Debug Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        #log { background: #f8f9fa; padding: 10px; border: 1px solid #dee2e6; margin-top: 20px; height: 300px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+    <h1>Extension Debug Page</h1>
+    
+    <div class="status info">
+        This page will help debug the YouTube extension functionality.
+    </div>
+
+    <h2>Extension Status</h2>
+    <div id="extensionStatus" class="status">Checking extension...</div>
+
+    <h2>Test Actions</h2>
+    <button onclick="testExtension()">Test Extension Load</button>
+    <button onclick="testYouTubeNavigation()">Test YouTube Navigation</button>
+    <button onclick="clearLog()">Clear Log</button>
+
+    <h2>Debug Log</h2>
+    <div id="log"></div>
+
+    <script>
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            entry.style.padding = '2px 0';
+            entry.style.borderBottom = '1px solid #eee';
+            entry.innerHTML = `[${timestamp}] <strong>${type.toUpperCase()}:</strong> ${message}`;
+            logDiv.appendChild(entry);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+        }
+
+        function testExtension() {
+            log('Testing extension presence...');
+            
+            // Check if extension content scripts are loaded
+            if (typeof chrome !== 'undefined' && chrome.runtime) {
+                log('Chrome runtime available', 'success');
+                
+                // Try to communicate with extension
+                try {
+                    chrome.runtime.sendMessage({type: 'HEALTH_CHECK'}, (response) => {
+                        if (chrome.runtime.lastError) {
+                            log('Extension communication failed: ' + chrome.runtime.lastError.message, 'error');
+                        } else {
+                            log('Extension communication successful: ' + JSON.stringify(response), 'success');
+                        }
+                    });
+                } catch (e) {
+                    log('Extension communication error: ' + e.message, 'error');
+                }
+            } else {
+                log('Chrome runtime not available - extension may not be loaded', 'error');
+            }
+        }
+
+        function testYouTubeNavigation() {
+            log('Testing YouTube navigation...');
+            window.open('https://www.youtube.com/watch?v=dQw4w9WgXcQ', '_blank');
+            log('Opened YouTube video in new tab', 'info');
+        }
+
+        // Initialize page
+        window.onload = function() {
+            log('Debug page loaded');
+            testExtension();
+        };
+
+        // Listen for extension messages
+        window.addEventListener('message', function(event) {
+            if (event.source !== window) return;
+            
+            if (event.data.type && event.data.type.startsWith('YT_')) {
+                log('Received extension message: ' + JSON.stringify(event.data), 'success');
+            }
+        });
+    </script>
+</body>
+</html>
