@@ -16,6 +16,14 @@
       <button id="load-video-btn">Load Video</button>
       <button id="extract-subtitles-btn">Extract Subtitles</button>
     </div>
+    <div id="api-key-test-container">
+      <h2>API Key Tests</h2>
+      <input type="text" id="api-key-input" placeholder="Enter API Key to Test">
+      <button id="save-key-btn">Save Key</button>
+      <button id="load-key-btn">Load Key</button>
+      <button id="clear-key-btn">Clear Key</button>
+      <p>Loaded Key: <span id="loaded-key-display"></span></p>
+    </div>
     <div id="results-container">
       <h2>Results</h2>
       <div id="subtitles-output"></div>
@@ -36,6 +44,12 @@
     const errorOutput = document.getElementById('error-output');
     const player = document.getElementById('youtube-player');
 
+    const apiKeyInput = document.getElementById('api-key-input');
+    const saveKeyBtn = document.getElementById('save-key-btn');
+    const loadKeyBtn = document.getElementById('load-key-btn');
+    const clearKeyBtn = document.getElementById('clear-key-btn');
+    const loadedKeyDisplay = document.getElementById('loaded-key-display');
+
     let currentVideoId = 'dQw4w9WgXcQ';
 
     // Load a new video into the player
@@ -55,6 +69,34 @@
       errorOutput.innerHTML = '';
       window.postMessage({ type: 'TRIGGER_SUBTITLE_EXTRACTION', videoId: currentVideoId }, '*');
     });
+
+    // --- API Key Test Logic ---
+    saveKeyBtn.addEventListener('click', () => {
+      const apiKey = apiKeyInput.value.trim();
+      if (apiKey) {
+        chrome.storage.local.set({ 'youtube-api-key': apiKey }, () => {
+          console.log('API key saved.');
+        });
+      }
+    });
+
+    loadKeyBtn.addEventListener('click', () => {
+      chrome.storage.local.get('youtube-api-key', (data) => {
+        if (data['youtube-api-key']) {
+          loadedKeyDisplay.textContent = data['youtube-api-key'];
+        } else {
+          loadedKeyDisplay.textContent = 'No key found.';
+        }
+      });
+    });
+
+    clearKeyBtn.addEventListener('click', () => {
+      chrome.storage.local.remove('youtube-api-key', () => {
+        console.log('API key cleared.');
+        loadedKeyDisplay.textContent = '';
+      });
+    });
+
 
     // Listen for results from the extraction scripts
     window.addEventListener('message', (event) => {

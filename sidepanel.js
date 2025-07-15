@@ -2,6 +2,8 @@
 const statusMessage = document.getElementById('status-message');
 const extractBtn = document.getElementById('extract-btn');
 const apiKeyInput = document.getElementById('api-key-input');
+const saveApiKeyBtn = document.getElementById('save-api-key-btn');
+const clearApiKeyBtn = document.getElementById('clear-api-key-btn');
 const transcriptContainer = document.getElementById('transcript-container');
 const errorContainer = document.getElementById('error-container');
 
@@ -26,6 +28,35 @@ function displaySubtitles(subtitles) {
 // Function to display an error
 function displayError(error) {
   errorContainer.textContent = error;
+}
+
+// Save the API key to local storage
+saveApiKeyBtn.addEventListener('click', () => {
+  const apiKey = apiKeyInput.value.trim();
+  if (apiKey) {
+    chrome.storage.local.set({ 'youtube-api-key': apiKey }, () => {
+      setStatus('API key saved successfully!');
+    });
+  } else {
+    setStatus('Please enter an API key.', true);
+  }
+});
+
+// Clear the API key from local storage
+clearApiKeyBtn.addEventListener('click', () => {
+  chrome.storage.local.remove('youtube-api-key', () => {
+    apiKeyInput.value = '';
+    setStatus('API key cleared.');
+  });
+});
+
+// Load the API key from local storage
+function loadApiKey() {
+  chrome.storage.local.get('youtube-api-key', (data) => {
+    if (data['youtube-api-key']) {
+      apiKeyInput.value = data['youtube-api-key'];
+    }
+  });
 }
 
 // Listen for the extract button click
@@ -77,5 +108,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 });
 
-// Get the current video ID when the side panel is opened
+// Get the current video ID and load the API key when the side panel is opened
 chrome.runtime.sendMessage({ type: 'GET_CURRENT_VIDEO_ID' });
+loadApiKey();
