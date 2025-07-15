@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Test Harness for Subtitle Extraction</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Subtitle Extraction Test Harness</h1>
+    <div id="video-container">
+      <iframe id="youtube-player" width="560" height="315" src="https://www.youtube.com/embed/dQw4w9WgXcQ" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    </div>
+    <div id="controls">
+      <input type="text" id="video-id-input" placeholder="Enter YouTube Video ID" value="dQw4w9WgXcQ">
+      <button id="load-video-btn">Load Video</button>
+      <button id="extract-subtitles-btn">Extract Subtitles</button>
+    </div>
+    <div id="results-container">
+      <h2>Results</h2>
+      <div id="subtitles-output"></div>
+      <div id="error-output"></div>
+    </div>
+  </div>
+
+  <script src="debug.js"></script>
+  <script src="youtube-transcript-extractor.js"></script>
+  <script src="youtube-api-extractor.js"></script>
+
+  <script>
+    // --- Test Harness Logic ---
+    const videoIdInput = document.getElementById('video-id-input');
+    const loadVideoBtn = document.getElementById('load-video-btn');
+    const extractSubtitlesBtn = document.getElementById('extract-subtitles-btn');
+    const subtitlesOutput = document.getElementById('subtitles-output');
+    const errorOutput = document.getElementById('error-output');
+    const player = document.getElementById('youtube-player');
+
+    let currentVideoId = 'dQw4w9WgXcQ';
+
+    // Load a new video into the player
+    loadVideoBtn.addEventListener('click', () => {
+      const newVideoId = videoIdInput.value.trim();
+      if (newVideoId) {
+        currentVideoId = newVideoId;
+        player.src = `https://www.youtube.com/embed/${currentVideoId}`;
+        subtitlesOutput.innerHTML = '';
+        errorOutput.innerHTML = '';
+      }
+    });
+
+    // Trigger the subtitle extraction
+    extractSubtitlesBtn.addEventListener('click', () => {
+      subtitlesOutput.innerHTML = '';
+      errorOutput.innerHTML = '';
+      window.postMessage({ type: 'TRIGGER_SUBTITLE_EXTRACTION', videoId: currentVideoId }, '*');
+    });
+
+    // Listen for results from the extraction scripts
+    window.addEventListener('message', (event) => {
+      if (event.source !== window || !event.data.type) {
+        return;
+      }
+
+      if (event.data.type === 'SUBTITLES_EXTRACTED') {
+        displaySubtitles(event.data.subtitles);
+      } else if (event.data.type === 'SUBTITLES_ERROR') {
+        displayError(event.data.error);
+      }
+    });
+
+    // Display the extracted subtitles
+    function displaySubtitles(subtitles) {
+      subtitles.forEach(line => {
+        const p = document.createElement('p');
+        p.textContent = `[${line.start.toFixed(2)}] ${line.text}`;
+        subtitlesOutput.appendChild(p);
+      });
+    }
+
+    // Display any errors
+    function displayError(error) {
+      errorOutput.textContent = `Error: ${error}`;
+    }
+  </script>
+</body>
+</html>
